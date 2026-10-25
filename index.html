@@ -391,9 +391,10 @@
     ];
 
     const LANDMARKS = [
-      { name: '🚄 竹北高鐵特區', lat: 24.8080, lng: 121.0400 },
+      { name: '🏠 竹北市莊敬三路360號', lat: 24.8272, lng: 121.0250 },
       { name: '🛍️ 遠百竹北 / 莊敬商圈', lat: 24.8230, lng: 121.0230 },
       { name: '🍴 竹北光明美食商圈', lat: 24.8280, lng: 121.0130 },
+      { name: '🚄 竹北高鐵特區', lat: 24.8080, lng: 121.0400 },
       { name: '🏬 新竹巨城 (Big City)', lat: 24.8090, lng: 120.9750 },
       { name: '🏮 新竹城隍廟商圈', lat: 24.8040, lng: 120.9650 },
       { name: '🎓 清大夜市 / 建功商圈', lat: 24.7950, lng: 120.9960 },
@@ -401,39 +402,76 @@
     ];
 
     const INITIAL_RESTAURANTS = [
-      // 竹北光明與遠百商圈
-      { id: 'r1', name: '青花驕麻辣鍋 (竹北光明店)', cat: 'hotpot', price: 3, rating: 4.8, reviews: 5200, lat: 24.8288, lng: 121.0140, addr: '竹北市光明一路206號', phone: '03-558-8669', tag: '青花椒麻辣、果凍鴨血', bookingType: 'inline' },
-      { id: 'r2', name: '這一鍋皇室秘藏鍋物 (竹北光明店)', cat: 'hotpot', price: 3, rating: 4.6, reviews: 4800, lat: 24.8285, lng: 121.0110, addr: '竹北市光明一路288號', phone: '03-657-5151', tag: '老火湯、神仙牛肉', bookingType: 'inline' },
-      { id: 'r3', name: '海底撈火鍋 (竹北遠百店)', cat: 'hotpot', price: 3, rating: 4.8, reviews: 8500, lat: 24.8230, lng: 121.0230, addr: '竹北市莊敬北路18號', phone: '03-658-0000', tag: '變臉撈麵、無微不至服務', bookingType: 'inline' },
-      { id: 'r4', name: '嗑肉石鍋 (竹北莊敬店)', cat: 'hotpot', price: 2, rating: 4.7, reviews: 3200, lat: 24.8225, lng: 121.0245, addr: '竹北市莊敬五街', phone: '03-668-8888', tag: '肉瀑布、澎湃蔬菜吧', bookingType: 'inline' },
-      { id: 'r5', name: '石二鍋 (竹北家樂福店)', cat: 'hotpot', price: 1, rating: 4.4, reviews: 3200, lat: 24.8260, lng: 121.0105, addr: '竹北市縣政九路155號', phone: '03-558-5122', tag: '平價小火鍋、冬瓜檸檬', bookingType: 'phone' },
-      { id: 'r6', name: '六扇門時尚湯鍋 (竹北三民店)', cat: 'hotpot', price: 1, rating: 4.2, reviews: 1980, lat: 24.8340, lng: 121.0120, addr: '竹北市三民路', phone: '03-551-6688', tag: '百元鍋物、冰淇淋吧', bookingType: 'phone' },
-      { id: 'r7', name: '教父牛排 Top Cap (竹北店)', cat: 'steak', price: 3, rating: 4.6, reviews: 2280, lat: 24.8120, lng: 121.0290, addr: '竹北市文興路一段59號', phone: '03-668-5828', tag: '米其林乾式熟成牛排', bookingType: 'inline' },
-      { id: 'r8', name: '夏慕尼新香榭鐵板燒 (竹北光明)', cat: 'steak', price: 3, rating: 4.7, reviews: 5560, lat: 24.8285, lng: 121.0138, addr: '竹北市光明一路128號', phone: '03-657-0648', tag: '浪漫法式鐵板燒', bookingType: 'inline' },
-      { id: 'r9', name: '史坦利美式牛排 (竹北成功店)', cat: 'steak', price: 2, rating: 4.5, reviews: 3820, lat: 24.8195, lng: 121.0215, addr: '竹北市成功二街142號', phone: '03-550-8018', tag: '舒肥炭烤、超高CP值', bookingType: 'inline' },
-      { id: 'r10', name: '瀧厚炙燒熟成牛排 (竹北遠百)', cat: 'steak', price: 2, rating: 4.4, reviews: 2450, lat: 24.8225, lng: 121.0230, addr: '竹北市莊敬北路18號', phone: '03-550-6669', tag: '熟成牛排、牛肉羅宋湯無限喝', bookingType: 'inline' },
-      { id: 'r11', name: '大埔鐵板燒 (竹北三民店)', cat: 'steak', price: 1, rating: 4.0, reviews: 1720, lat: 24.8340, lng: 121.0110, addr: '竹北市三民路256號', phone: '03-551-8228', tag: '平價現炒、重口味下飯', bookingType: 'phone' },
-      { id: 'r12', name: '茶六燒肉堂 (竹北遠百店)', cat: 'yakiniku', price: 3, rating: 4.8, reviews: 5320, lat: 24.8228, lng: 121.0235, addr: '竹北市莊敬北路18號', phone: '03-550-6622', tag: '極品和牛、精緻燒肉套餐', bookingType: 'inline' },
+      // --- 竹北莊敬三路 / 莊敬五街 / 勝利路（莊敬三路360號生活圈） ---
+      { id: 'zj1', name: '嗑肉石鍋 (竹北莊敬店)', cat: 'hotpot', price: 2, rating: 4.7, reviews: 3200, lat: 24.8275, lng: 121.0255, addr: '竹北市莊敬五街243號', phone: '03-610-9996', tag: '肉瀑布、蔬菜自助吧', bookingType: 'inline' },
+      { id: 'zj2', name: '品鴨集', cat: 'taiwanese', price: 2, rating: 4.4, reviews: 480, lat: 24.8273, lng: 121.0252, addr: '竹北市莊敬五街223號', phone: '03-550-8800', tag: '招牌烤鴨、精緻合菜', bookingType: 'phone' },
+      { id: 'zj3', name: '角落義式廚坊', cat: 'western', price: 1, rating: 4.3, reviews: 360, lat: 24.8274, lng: 121.0253, addr: '竹北市莊敬五街225號', phone: '0927-951-517', tag: '平價手工義大利麵披薩', bookingType: 'phone' },
+      { id: 'zj4', name: '源昌麻油雞', cat: 'taiwanese', price: 1, rating: 3.9, reviews: 420, lat: 24.8235, lng: 121.0245, addr: '竹北市莊敬三路115號', phone: '03-668-2058', tag: '溫補麻油雞、麵線滷肉飯', bookingType: 'phone' },
+      { id: 'zj5', name: '家禾麵食館 (莊敬店)', cat: 'dumpling', price: 1, rating: 3.9, reviews: 580, lat: 24.8238, lng: 121.0248, addr: '竹北市莊敬五街60號', phone: '03-667-3930', tag: '牛肉麵、水餃、黑白切滷味', bookingType: 'phone' },
+      { id: 'zj6', name: '車庫鹽酥雞 (竹北莊敬)', cat: 'fried_bbq', price: 2, rating: 4.4, reviews: 2180, lat: 24.8215, lng: 121.0225, addr: '竹北市莊敬三路', phone: '03-667-6066', tag: '室內冷氣聚餐、現炸鹹酥雞烤物', bookingType: 'phone' },
+      { id: 'zj7', name: '廢材串燒酒場 Skewers & Beer', cat: 'yakiniku', price: 2, rating: 4.9, reviews: 1800, lat: 24.8220, lng: 121.0230, addr: '竹北市莊敬三路120號', phone: '03-668-5025', tag: '莊敬商圈人氣爆棚串燒', bookingType: 'inline' },
+      { id: 'zj8', name: '小院子·台食茶館', cat: 'taiwanese', price: 2, rating: 4.1, reviews: 620, lat: 24.8280, lng: 121.0235, addr: '竹北市莊敬北路268號', phone: '03-658-8257', tag: '文青風格家常定食台菜', bookingType: 'phone' },
+      { id: 'zj9', name: 'GUNGUN FONDUE', cat: 'western', price: 2, rating: 4.8, reviews: 520, lat: 24.8270, lng: 121.0240, addr: '竹北市勝利五路50號', phone: '03-658-6277', tag: '質感瑞士起司鍋、義法料理', bookingType: 'phone' },
+      { id: 'zj10', name: 'Sit Back Cafe 寵物友善餐廳', cat: 'brunch', price: 2, rating: 4.8, reviews: 490, lat: 24.8260, lng: 121.0250, addr: '竹北市莊敬五街157號', phone: '03-668-8888', tag: '質感早午餐、港式輕食', bookingType: 'phone' },
+      { id: 'zj11', name: '非晉餐廚 (竹北勝利店)', cat: 'braised', price: 1, rating: 4.2, reviews: 880, lat: 24.8245, lng: 121.0240, addr: '竹北市勝利一路85號1樓', phone: '03-668-1205', tag: '低卡高蛋白健康便當餐盒', bookingType: 'phone' },
+      { id: 'zj12', name: '喜歡你餐坊 (竹北勝利店)', cat: 'western', price: 2, rating: 4.8, reviews: 650, lat: 24.8235, lng: 121.0235, addr: '竹北市勝利一路1號', phone: '03-668-2742', tag: '烘焙手作麵包、海鮮義大利麵', bookingType: 'inline' },
+      { id: 'zj13', name: '伴日嚐', cat: 'japanese', price: 2, rating: 4.3, reviews: 410, lat: 24.8242, lng: 121.0242, addr: '竹北市勝利二路118號', phone: '03-550-0339', tag: '日式家常定食、手作咖哩', bookingType: 'phone' },
+      { id: 'zj14', name: '樂聚波奇 Poke', cat: 'braised', price: 1, rating: 4.6, reviews: 520, lat: 24.8240, lng: 121.0240, addr: '竹北市勝利二路109號', phone: '03-657-6040', tag: '夏威夷生魚波奇碗健康餐', bookingType: 'phone' },
+      { id: 'zj15', name: '泰來福泰式料理', cat: 'southeast', price: 2, rating: 4.3, reviews: 680, lat: 24.8243, lng: 121.0245, addr: '竹北市勝利二路128號', phone: '03-668-8891', tag: '道地泰國菜、椒麻雞月亮蝦餅', bookingType: 'phone' },
+      { id: 'zj16', name: '厚道飲食店 (竹北店)', cat: 'taiwanese', price: 1, rating: 4.2, reviews: 920, lat: 24.8240, lng: 121.0238, addr: '竹北市勝利二路101號', phone: '03-550-2233', tag: '古早味排骨飯、酥炸雞腿飯', bookingType: 'phone' },
+      { id: 'zj17', name: '好煮藝風味小館', cat: 'taiwanese', price: 2, rating: 4.3, reviews: 450, lat: 24.8248, lng: 121.0242, addr: '竹北市勝利三街100號', phone: '03-658-9115', tag: '客家風味家常菜、熱炒聚餐', bookingType: 'phone' },
+      { id: 'zj18', name: '藏野炙屋 (竹北旗艦店)', cat: 'yakiniku', price: 2, rating: 3.9, reviews: 720, lat: 24.8278, lng: 121.0232, addr: '竹北市莊敬北路252號', phone: '03-667-0077', tag: '精緻居酒屋、炭火串燒', bookingType: 'inline' },
+      { id: 'zj19', name: '十八食堂 (竹北日式串燒鍋物)', cat: 'yakiniku', price: 2, rating: 4.4, reviews: 850, lat: 24.8280, lng: 121.0233, addr: '竹北市莊敬北路266號', phone: '03-668-2203', tag: '串燒烤物、麻辣烤魚快炒', bookingType: 'phone' },
+      { id: 'zj20', name: '豬豬的拉麵屋', cat: 'japanese', price: 1, rating: 4.7, reviews: 920, lat: 24.8230, lng: 121.0230, addr: '竹北市莊敬北路120號1樓', phone: '03-657-6992', tag: '平價日式豚骨拉麵', bookingType: 'phone' },
+      { id: 'zj21', name: '春耕餐廳 婚宴會館', cat: 'taiwanese', price: 3, rating: 4.2, reviews: 1100, lat: 24.8290, lng: 121.0238, addr: '竹北市莊敬北路326號', phone: '03-667-6259', tag: '大型合菜合席宴會', bookingType: 'phone' },
+      { id: 'zj22', name: '川炁‧飯麵館', cat: 'dumpling', price: 1, rating: 4.2, reviews: 380, lat: 24.8270, lng: 121.0260, addr: '竹北市莊敬六街109號', phone: '03-658-5544', tag: '道地川味燃麵與紅油炒手', bookingType: 'phone' },
+      { id: 'zj23', name: '鴿子廚房 (竹北勝利店)', cat: 'braised', price: 1, rating: 4.3, reviews: 420, lat: 24.8265, lng: 121.0265, addr: '竹北市莊敬七街57號', phone: '03-668-5233', tag: '家常排骨飯與每日特餐便當', bookingType: 'phone' },
+      { id: 'zj24', name: '串迷•製串所 (竹北店)', cat: 'yakiniku', price: 2, rating: 4.9, reviews: 950, lat: 24.8240, lng: 121.0235, addr: '竹北市勝利十二街140號', phone: '03-668-8613', tag: '深夜串燒首選', bookingType: 'phone' },
+
+      // --- 遠百竹北 / 成功商圈 ---
+      { id: 'r3', name: '海底撈火鍋 (竹北遠百店)', cat: 'hotpot', price: 3, rating: 4.8, reviews: 8500, lat: 24.8230, lng: 121.0230, addr: '竹北市莊敬北路18號8樓', phone: '03-658-0000', tag: '變臉撈麵、無微不至服務', bookingType: 'inline' },
+      { id: 'r12', name: '茶六燒肉堂 (竹北遠百店)', cat: 'yakiniku', price: 3, rating: 4.8, reviews: 5320, lat: 24.8228, lng: 121.0235, addr: '竹北市莊敬北路18號B2', phone: '03-550-6622', tag: '極品和牛、精緻燒肉套餐', bookingType: 'inline' },
       { id: 'r13', name: '森森燒肉 (竹北莊敬店)', cat: 'yakiniku', price: 3, rating: 4.9, reviews: 6850, lat: 24.8210, lng: 121.0235, addr: '竹北市莊敬南路29號', phone: '03-667-3199', tag: '法式甜點吧無限續', bookingType: 'inline' },
-      { id: 'r14', name: '胡同燒肉 夜食 (竹北店)', cat: 'yakiniku', price: 3, rating: 4.7, reviews: 1800, lat: 24.8250, lng: 121.0150, addr: '竹北市縣政二路', phone: '03-657-5222', tag: '吧台專人代烤、牛舌必點', bookingType: 'inline' },
-      { id: 'r15', name: '燒肉Smile (竹北文興店)', cat: 'yakiniku', price: 2, rating: 4.6, reviews: 2800, lat: 24.8095, lng: 121.0285, addr: '竹北市文興路一段182號', phone: '03-668-3322', tag: '一人獨享平價燒肉', bookingType: 'inline' },
-      { id: 'r16', name: '廢材串燒酒場 Skewers & Beer', cat: 'yakiniku', price: 2, rating: 4.9, reviews: 1800, lat: 24.8220, lng: 121.0230, addr: '竹北市莊敬三路120號', phone: '03-668-5025', tag: '遠百周邊人氣串燒', bookingType: 'inline' },
-      { id: 'r17', name: '藏壽司 Kura Sushi (竹北文興)', cat: 'japanese', price: 1, rating: 4.4, reviews: 3550, lat: 24.8110, lng: 121.0270, addr: '竹北市文興路一段166號', phone: '03-667-2201', tag: '壽司扭蛋、家庭最愛', bookingType: 'inline' },
-      { id: 'r18', name: '嵐沺拉麵 (竹北勝利店)', cat: 'japanese', price: 2, rating: 4.5, reviews: 1950, lat: 24.8238, lng: 121.0240, addr: '竹北市勝利二路118號', phone: '03-558-9211', tag: '濃厚雞白湯拉麵', bookingType: 'phone' },
+      { id: 'gm4', name: 'TGI FRIDAYS 星期五美式餐廳', cat: 'western', price: 2, rating: 4.8, reviews: 3100, lat: 24.8210, lng: 121.0235, addr: '竹北市莊敬南路29號', phone: '03-668-8090', tag: '美式豬肋排歡樂聚餐', bookingType: 'inline' },
+      { id: 'gm11', name: 'Texas Roadhouse 德州鮮切牛排', cat: 'steak', price: 3, rating: 4.6, reviews: 2500, lat: 24.8210, lng: 121.0230, addr: '竹北市莊敬南路27號1樓', phone: '03-550-7848', tag: '手工鮮切牛排、現烤麵包', bookingType: 'inline' },
+      { id: 'r10', name: '瀧厚炙燒熟成牛排 (竹北遠百)', cat: 'steak', price: 2, rating: 4.4, reviews: 2450, lat: 24.8225, lng: 121.0230, addr: '竹北市莊敬北路18號', phone: '03-550-6669', tag: '熟成牛排、牛肉羅宋湯無限喝', bookingType: 'inline' },
+      { id: 'r9', name: '史坦利美式牛排 (竹北成功店)', cat: 'steak', price: 2, rating: 4.5, reviews: 3820, lat: 24.8195, lng: 121.0215, addr: '竹北市成功二街142號', phone: '03-550-8018', tag: '舒肥炭烤、超高CP值牛排', bookingType: 'inline' },
+      { id: 'gm13', name: 'The BBQ House (成功店)', cat: 'steak', price: 3, rating: 4.6, reviews: 1200, lat: 24.8195, lng: 121.0215, addr: '竹北市成功十一街21號', phone: '03-668-2288', tag: '現切冷藏熟成牛排炭烤', bookingType: 'inline' },
+      { id: 'gm3', name: '真珠-台灣佳味 (竹北店)', cat: 'taiwanese', price: 2, rating: 4.8, reviews: 1200, lat: 24.8190, lng: 121.0260, addr: '竹北市自強南路36號2樓', phone: '03-622-3077', tag: '精緻古早味台菜家常料理', bookingType: 'inline' },
+
+      // --- 竹北光明美食商圈 ---
+      { id: 'r1', name: '青花驕麻辣鍋 (竹北光明店)', cat: 'hotpot', price: 3, rating: 4.8, reviews: 5200, lat: 24.8288, lng: 121.0140, addr: '竹北市光明一路206號', phone: '03-558-8669', tag: '青花椒麻辣、果凍鴨血豆腐', bookingType: 'inline' },
+      { id: 'r2', name: '這一鍋皇室秘藏鍋物 (竹北光明店)', cat: 'hotpot', price: 3, rating: 4.6, reviews: 4800, lat: 24.8285, lng: 121.0110, addr: '竹北市光明一路288號', phone: '03-657-5151', tag: '老火湯、神仙牛肉', bookingType: 'inline' },
+      { id: 'r8', name: '夏慕尼新香榭鐵板燒 (竹北光明)', cat: 'steak', price: 3, rating: 4.7, reviews: 5560, lat: 24.8285, lng: 121.0138, addr: '竹北市光明一路128號', phone: '03-657-0648', tag: '法式鐵板燒、白蘭地鴨胸', bookingType: 'inline' },
       { id: 'r19', name: '薄多義 Bite 2 Eat (竹北店)', cat: 'western', price: 2, rating: 4.6, reviews: 3550, lat: 24.8284, lng: 121.0142, addr: '竹北市光明一路', phone: '03-657-3878', tag: '手工披薩、香脆炸雞翅', bookingType: 'inline' },
       { id: 'r20', name: '開飯川食堂 (竹北光明店)', cat: 'taiwanese', price: 2, rating: 4.8, reviews: 4820, lat: 24.8282, lng: 121.0135, addr: '竹北市光明一路256號', phone: '03-657-2177', tag: '流口水雞、香辣下飯川菜', bookingType: 'inline' },
       { id: 'r21', name: '十一街麵食館 (竹北總店)', cat: 'dumpling', price: 1, rating: 4.2, reviews: 7120, lat: 24.8286, lng: 121.0125, addr: '竹北市光明一路275號', phone: '03-553-9368', tag: '招牌葫蘆水餃、牛肉捲餅', bookingType: 'phone' },
+      { id: 'r14', name: '胡同燒肉 夜食 (竹北店)', cat: 'yakiniku', price: 3, rating: 4.7, reviews: 1800, lat: 24.8250, lng: 121.0150, addr: '竹北市縣政二路', phone: '03-657-5222', tag: '吧台專人代烤、牛舌必點', bookingType: 'inline' },
+
+      // --- 文興路 / 竹北高鐵特區 ---
+      { id: 'r7', name: '教父牛排 Top Cap (竹北店)', cat: 'steak', price: 3, rating: 4.6, reviews: 2280, lat: 24.8120, lng: 121.0290, addr: '竹北市文興路一段59號', phone: '03-668-5828', tag: '米其林乾式熟成牛排', bookingType: 'inline' },
+      { id: 'r15', name: '燒肉Smile (竹北文興店)', cat: 'yakiniku', price: 2, rating: 4.6, reviews: 2800, lat: 24.8095, lng: 121.0285, addr: '竹北市文興路一段182號', phone: '03-668-3322', tag: '一人獨享平價燒肉', bookingType: 'inline' },
+      { id: 'r17', name: '藏壽司 Kura Sushi (竹北文興)', cat: 'japanese', price: 1, rating: 4.4, reviews: 3550, lat: 24.8110, lng: 121.0270, addr: '竹北市文興路一段166號', phone: '03-667-2201', tag: '壽司扭蛋、家庭最愛', bookingType: 'inline' },
       { id: 'r22', name: '黑皮驊魯肉飯 (竹北高鐵)', cat: 'braised', price: 1, rating: 4.5, reviews: 3620, lat: 24.8350, lng: 121.0030, addr: '竹北市嘉興路150號', phone: '03-658-7112', tag: '黑金膠質滷肉飯', bookingType: 'phone' },
-      { id: 'r23', name: '車庫鹽酥雞 (竹北莊敬)', cat: 'fried_bbq', price: 2, rating: 4.4, reviews: 2180, lat: 24.8215, lng: 121.0225, addr: '竹北市莊敬三路', phone: '03-667-6066', tag: '室內冷氣聚餐、現炸鹹酥雞', bookingType: 'phone' }
+      { id: 'gm6', name: '桃金鍋物 (竹北高鐵門市)', cat: 'hotpot', price: 2, rating: 4.3, reviews: 890, lat: 24.8080, lng: 121.0350, addr: '竹北市復興三路一段108號', phone: '03-668-3306', tag: '高鐵區質感個人鍋物', bookingType: 'inline' },
+
+      // --- 平價小吃與三民路商圈 ---
+      { id: 'r5', name: '石二鍋 (竹北家樂福店)', cat: 'hotpot', price: 1, rating: 4.4, reviews: 3200, lat: 24.8260, lng: 121.0105, addr: '竹北市縣政九路155號', phone: '03-558-5122', tag: '平價小火鍋、冬瓜檸檬', bookingType: 'phone' },
+      { id: 'r6', name: '六扇門時尚湯鍋 (竹北三民店)', cat: 'hotpot', price: 1, rating: 4.2, reviews: 1980, lat: 24.8340, lng: 121.0120, addr: '竹北市三民路', phone: '03-551-6688', tag: '百元鍋物、冰淇淋自助吧', bookingType: 'phone' },
+      { id: 'r11', name: '大埔鐵板燒 (竹北三民店)', cat: 'steak', price: 1, rating: 4.0, reviews: 1720, lat: 24.8340, lng: 121.0110, addr: '竹北市三民路256號', phone: '03-551-8228', tag: '平價現炒、重口味下飯', bookingType: 'phone' },
+      { id: 'gm22', name: '筑山拉麵 (竹北中正東店)', cat: 'japanese', price: 1, rating: 4.9, reviews: 1500, lat: 24.8350, lng: 121.0050, addr: '竹北市中正東路250號', phone: '03-554-0088', tag: '在地激推濃郁系拉麵', bookingType: 'phone' }
     ];
 
     // ==========================================
-    // 2. 狀態管理
+    // 2. 狀態管理 (預設定位改為竹北市莊敬三路360號)
     // ==========================================
+    const DEFAULT_COORDS = { lat: 24.8272, lng: 121.0250 };
+    const DEFAULT_LABEL = '📍 預設位置：竹北市莊敬三路360號';
+
     const state = {
       step: 1,
-      userCoords: { lat: 24.8080, lng: 121.0400 }, // 預設竹北高鐵
-      locationLabel: '📍 預設位置：竹北高鐵特區',
+      userCoords: { ...DEFAULT_COORDS },
+      locationLabel: DEFAULT_LABEL,
       radiusKm: 1.5,
       nearbyPriority: true,
       inlineOnly: false,
@@ -578,19 +616,10 @@
         localStorage.setItem('WIFE_EMAIL', state.wifeEmail);
       };
 
-      // 導覽步驟切換
-      document.getElementById('nav-step-1').onclick = () => switchStep(1);
-      document.getElementById('nav-step-2').onclick = () => {
-        if (state.drawnShops.length > 0) switchStep(2);
-      };
-      document.getElementById('nav-step-3').onclick = () => {
-        if (state.priorities.length > 0) switchStep(3);
-      };
-
-      // 定位按鈕
+      // 定位按鈕 (含失敗自動回退莊敬三路360號)
       document.getElementById('btn-gps').onclick = () => {
+        const locDisplay = document.getElementById('current-location-display');
         if ('geolocation' in navigator) {
-          const locDisplay = document.getElementById('current-location-display');
           locDisplay.textContent = '⏳ 正在讀取手機 GPS 定位...';
           navigator.geolocation.getCurrentPosition(
             (pos) => {
@@ -599,11 +628,20 @@
               locDisplay.textContent = state.locationLabel;
               updateEligibleCountUI();
             },
-            () => {
-              locDisplay.textContent = '⚠️ 定位失敗，使用預設竹北高鐵中心';
+            (err) => {
+              console.warn('GPS 定位失敗，自動採用竹北市莊敬三路360號：', err);
+              state.userCoords = { ...DEFAULT_COORDS };
+              state.locationLabel = '📍 定位失敗，已自動定位：竹北市莊敬三路360號';
+              locDisplay.textContent = state.locationLabel;
+              updateEligibleCountUI();
             },
-            { timeout: 8000 }
+            { timeout: 7000, enableHighAccuracy: true }
           );
+        } else {
+          state.userCoords = { ...DEFAULT_COORDS };
+          state.locationLabel = '📍 瀏覽器無定位支援，已定位：竹北市莊敬三路360號';
+          locDisplay.textContent = state.locationLabel;
+          updateEligibleCountUI();
         }
       };
 
