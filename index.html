@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>🎲 要吃啥 - 智慧抽籤與自動候補訂位</title>
+  <meta name="apple-mobile-web-app-title" content="要吃啥" />
+  <meta name="application-name" content="要吃啥" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <!-- App 專屬高質感桌面圖示（支援 iPhone 與 Android 加入主畫面） -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23FF5B26'/%3E%3Cstop offset='100%25' stop-color='%23FFA439'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='115' fill='url(%23bg)'/%3E%3Ccircle cx='256' cy='230' r='125' fill='%23FFFFFF'/%3E%3Crect x='196' y='170' width='120' height='120' rx='24' fill='%23FFF0E2' stroke='%23FFCCA8' stroke-width='4'/%3E%3Ccircle cx='256' cy='230' r='24' fill='%23FF4D1A'/%3E%3Ctext x='256' y='430' font-size='66' font-weight='900' fill='%23FFFFFF' text-anchor='middle' font-family='sans-serif'%3E要吃啥%3E%3C/text%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23FF5B26'/%3E%3Cstop offset='100%25' stop-color='%23FFA439'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='115' fill='url(%23bg)'/%3E%3Ccircle cx='256' cy='230' r='125' fill='%23FFFFFF'/%3E%3Crect x='196' y='170' width='120' height='120' rx='24' fill='%23FFF0E2' stroke='%23FFCCA8' stroke-width='4'/%3E%3Ccircle cx='256' cy='230' r='24' fill='%23FF4D1A'/%3E%3Ctext x='256' y='430' font-size='66' font-weight='900' fill='%23FFFFFF' text-anchor='middle' font-family='sans-serif'%3E要吃啥%3E%3C/text%3E%3C/svg%3E" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#FFF8F1] text-[#3C2415] min-h-screen select-none flex justify-center items-start sm:py-6 p-0 sm:px-4">
+
+  <!-- 主機殼容器（模擬手機 App 介面） -->
+  <div id="app-container" class="w-full max-w-md bg-white border border-[#FDE6D2] shadow-2xl shadow-orange-950/5 rounded-none sm:rounded-[2.5rem] overflow-hidden flex flex-col h-screen sm:h-[94vh] relative">
+    
+    <!-- 頂部 Header -->
+    <header class="bg-gradient-to-r from-[#FF7A38] via-[#FF9238] to-[#FFA842] text-white px-5 pt-4 pb-3 shadow-md z-20 flex justify-between items-center shrink-0">
+      <div class="flex items-center gap-2.5">
+        <!-- 迷你版 App 圖標徽章 -->
+        <div class="w-9 h-9 rounded-xl bg-white shadow-md flex items-center justify-center p-1 border border-white/40 shrink-0">
+          <svg viewBox="0 0 100 100" class="w-full h-full">
+            <circle cx="50" cy="50" r="46" fill="#FFF2E5" />
+            <rect x="25" y="25" width="50" height="50" rx="10" fill="#FF5E28" />
+            <circle cx="50" cy="50" r="10" fill="#FFFFFF" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-black flex items-center gap-1.5 tracking-tight leading-none">
+            要吃啥 <span class="text-[10px] font-black bg-white/25 px-1.5 py-0.5 rounded-md uppercase tracking-wider ml-1">Pro Max</span>
+          </h1>
+          <p class="text-[11px] text-white/95 mt-1">智慧抽籤 ‧ 瀑布流自動候補訂位</p>
+        </div>
+      </div>
+      <button id="btn-toggle-settings" class="p-2 bg-white/20 hover:bg-white/30 rounded-xl transition active:scale-95" title="設定">
+        <i data-lucide="settings" class="w-5 h-5 text-white"></i>
+      </button>
+    </header>
+
+    <!-- 齒輪彈出設定面板 -->
+    <div id="settings-panel" class="hidden absolute top-16 left-4 right-4 bg-white rounded-2xl shadow-2xl border border-orange-100 p-4 z-40 animate-fadeIn">
+      <div class="flex justify-between items-center mb-3 border-b border-gray-100 pb-2">
+        <span class="font-bold text-xs text-slate-800 flex items-center gap-1.5">
+          <i data-lucide="sliders" class="w-4 h-4 text-orange-500"></i> 偏好與 API 金鑰設定
+        </span>
+        <button id="btn-close-settings" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded-lg font-bold">
+          關閉 ✕
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-[11px] font-bold text-slate-700 block mb-1">💑 Google 日曆預設受邀人 (老婆 Email)</label>
+          <input type="email" id="input-wife-email" placeholder="wife@gmail.com"
+            class="w-full text-xs p-2.5 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-orange-400 focus:bg-white" />
+        </div>
+        <div class="pt-2 border-t border-slate-100">
+          <label class="text-[11px] font-bold text-emerald-800 block mb-0.5">🌍 全球雷達 (Google Maps API Key)</label>
+          <p class="text-[10px] text-slate-400 mb-1">輸入後點「開始掃描收錄」，即時匯入周邊真實現役餐廳。</p>
+          <input type="password" id="input-google-key" placeholder="AIzaSy..."
+            class="w-full text-xs p-2.5 border border-emerald-200 rounded-xl bg-emerald-50/40 outline-none focus:border-emerald-500 focus:bg-white" />
+        </div>
+        <div class="pt-2 border-t border-slate-100">
+          <label class="text-[11px] font-bold text-amber-800 block mb-0.5">✨ AI 大腦 (免費 Gemini API Key)</label>
+          <p class="text-[10px] text-slate-400 mb-1">輸入後點「AI 智能推薦」，可依心情或出國地點精準挑選。</p>
+          <input type="password" id="input-gemini-key" placeholder="AIzaSy..."
+            class="w-full text-xs p-2.5 border border-amber-200 rounded-xl bg-amber-50/40 outline-none focus:border-amber-500 focus:bg-white" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 步驟頁籤導覽列 -->
+    <div class="grid grid-cols-3 gap-1 p-2 bg-[#FFF9F3] border-b border-[#FEE3CC] shrink-0 text-xs font-bold">
+      <button id="nav-step-1" class="py-1.5 rounded-lg bg-white shadow-sm text-orange-600 border border-orange-200">1. 地點/偏好</button>
+      <button id="nav-step-2" class="py-1.5 rounded-lg text-slate-500 hover:text-slate-800">2. 排順位</button>
+      <button id="nav-step-3" class="py-1.5 rounded-lg text-slate-500 hover:text-slate-800">3. 候補訂位</button>
+    </div>
+
+    <!-- 內容容器 -->
+    <div class="flex-1 overflow-hidden relative">
+
+      <!-- ==================== STEP 1: 地點、過濾與抽籤 ==================== -->
+      <div id="step-1-view" class="h-full overflow-y-auto custom-scroll p-4 space-y-3.5 pb-24">
+        
+        <!-- 地點設定卡片 -->
+        <div class="bg-white border border-[#FEE3CC] rounded-2xl p-3.5 shadow-sm space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-slate-800 flex items-center gap-1">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500"></i> 設定起點位置
+            </span>
+            <div class="flex gap-1.5">
+              <button id="btn-gps" class="text-[11px] font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 py-1 rounded-lg flex items-center gap-1 border border-rose-200 transition">
+                <i data-lucide="navigation" class="w-3 h-3"></i> 📍 定位現在位子
+              </button>
+              <button id="btn-open-landmarks" class="text-[11px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded-lg flex items-center gap-1 border border-blue-200 transition">
+                <i data-lucide="map" class="w-3 h-3"></i> 🗺️ 地圖快選
+              </button>
+            </div>
+          </div>
+          
+          <div class="flex gap-2">
+            <input type="text" id="input-custom-location" placeholder="手動搜尋地址或商圈 (例如: 竹北高鐵、巨城)" 
+              class="flex-1 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-orange-400 focus:bg-white" />
+            <button id="btn-custom-search" class="px-3 bg-slate-800 text-white text-xs font-bold rounded-xl active:scale-95">搜尋</button>
+          </div>
+          
+          <div id="current-location-display" class="text-[11px] text-orange-700 font-bold bg-orange-50/80 px-2.5 py-1.5 rounded-lg border border-orange-200/60 truncate">
+            📍 預設位置：竹北高鐵特區
+          </div>
+
+          <!-- 距離優先模式開關 -->
+          <div id="toggle-nearby" class="cursor-pointer p-2.5 rounded-xl border border-orange-300 bg-orange-50/40 flex justify-between items-center transition">
+            <div class="text-xs font-black flex items-center gap-1.5 text-slate-800">
+              <span id="nearby-checkbox">✅</span> 🏃 距離優先 (只抽附近名店)
+            </div>
+            <span class="text-[10px] text-orange-700 font-bold bg-orange-100/70 px-2 py-0.5 rounded-md">步行/生活圈</span>
+          </div>
+
+          <!-- 半徑選單 -->
+          <div id="radius-selector" class="flex gap-1.5 pt-0.5">
+            <button data-radius="1.5" class="radius-btn flex-1 py-1.5 text-xs font-bold border rounded-lg bg-[#FF6A28] text-white border-[#FF6A28] shadow-sm">步行 1.5km</button>
+            <button data-radius="3.5" class="radius-btn flex-1 py-1.5 text-xs font-bold border rounded-lg bg-slate-50 text-slate-600 border-slate-200">生活圈 3.5km</button>
+            <button data-radius="8.0" class="radius-btn flex-1 py-1.5 text-xs font-bold border rounded-lg bg-slate-50 text-slate-600 border-slate-200">大新竹 8km</button>
+          </div>
+        </div>
+
+        <!-- Inline 與 價位帶過濾 -->
+        <div class="bg-white border border-[#FEE3CC] rounded-2xl p-3.5 shadow-sm space-y-2.5">
+          <div id="toggle-inline" class="cursor-pointer p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 flex justify-between items-center transition">
+            <div class="text-xs font-black flex items-center gap-1.5 text-slate-700">
+              <span id="inline-checkbox">⬜</span> 📱 僅限支援 Inline 線上訂位
+            </div>
+            <span class="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">免撥號</span>
+          </div>
+
+          <div class="flex justify-between items-center pt-1">
+            <span class="text-xs font-black text-slate-800">💰 價位帶 (可複選)</span>
+            <span class="text-[10px] text-slate-400">預設：中價位</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5" id="price-tier-container">
+            <button data-price="1" class="price-btn p-2 rounded-xl border text-center transition bg-slate-50 text-slate-600 border-slate-200">
+              <div class="text-xs font-black">💲 平價</div>
+              <div class="text-[9px] text-slate-400 mt-0.5">$300 內</div>
+            </button>
+            <button data-price="2" class="price-btn p-2 rounded-xl border text-center transition bg-[#FF6A28] text-white border-[#FF6A28] shadow-sm">
+              <div class="text-xs font-black">💲💲 中價</div>
+              <div class="text-[9px] text-white/80 mt-0.5">$300~$800</div>
+            </button>
+            <button data-price="3" class="price-btn p-2 rounded-xl border text-center transition bg-slate-50 text-slate-600 border-slate-200">
+              <div class="text-xs font-black">💲💲💲 高檔</div>
+              <div class="text-[9px] text-slate-400 mt-0.5">$800+</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 餐廳類別選擇 (11 大類) -->
+        <div class="bg-white border border-[#FEE3CC] rounded-2xl p-3.5 shadow-sm space-y-2.5">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-black text-slate-800">🍽️ 餐廳類型 (可複選)</span>
+            <div class="flex gap-1.5">
+              <button id="btn-select-all-cats" class="text-[10px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded">全選</button>
+              <button id="btn-clear-cats" class="text-[10px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded border border-rose-200">取消全選</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5" id="category-grid">
+            <!-- 動態生成分類按鈕 -->
+          </div>
+
+          <div id="eligible-count-badge" class="text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl text-center">
+            目前符合條件的店家：<span id="eligible-count" class="text-emerald-950 font-black text-xs mx-1">0</span> 家待抽
+          </div>
+        </div>
+
+        <!-- 訂位時間與人數 -->
+        <div class="bg-white border border-[#FEE3CC] rounded-2xl p-3.5 shadow-sm grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 block mb-1">📅 日期</label>
+            <input type="date" id="booking-date" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-bold outline-none" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 block mb-1">⏰ 時間</label>
+            <input type="time" id="booking-time" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-bold outline-none" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 block mb-1">👥 人數</label>
+            <select id="party-size" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs font-bold outline-none">
+              <option value="1">1 位</option>
+              <option value="2" selected>2 位</option>
+              <option value="3">3 位</option>
+              <option value="4">4 位</option>
+              <option value="5">5 位</option>
+              <option value="6">6 位</option>
+              <option value="8">8 位</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Gemini 心情輸入框 -->
+        <div class="bg-white border border-amber-200 rounded-2xl p-3.5 shadow-sm">
+          <label class="text-xs font-black text-slate-800 flex items-center gap-1.5 mb-1.5">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> 告訴 Gemini 您現在的心情或地點 (選填)
+          </label>
+          <input type="text" id="input-mood" placeholder="例如: 人在馬德里想吃海鮮燉飯 / 下雨天想喝熱湯..." 
+            class="w-full text-xs p-2.5 bg-amber-50/30 border border-amber-200/80 rounded-xl outline-none focus:border-amber-400 focus:bg-white" />
+        </div>
+
+        <!-- 抽籤與雙亮色卡片按鈕區 -->
+        <div class="pt-1 pb-6 space-y-3">
+          <!-- 盲抽大按鈕 -->
+          <button id="btn-draw" class="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6A28] to-[#FF8C2B] text-white shadow-lg shadow-orange-500/25 active:scale-[0.99] transition">
+            🎲 交給命運！隨機盲抽 5 家
+          </button>
+
+          <!-- 亮色質感雙按鈕 -->
+          <div class="grid grid-cols-2 gap-3 pt-0.5">
+            <!-- 左邊：清爽薄荷青檸亮色質感按鈕 -->
+            <button id="btn-fetch-nearby" class="group relative overflow-hidden rounded-2xl border-2 border-emerald-200/90 bg-gradient-to-b from-white via-emerald-50/40 to-teal-50/60 p-3.5 shadow-md shadow-emerald-900/5 transition duration-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-teal-500/10 active:scale-[0.98] text-left">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white shadow-md shadow-emerald-500/25">
+                  <i data-lucide="compass" class="w-4 h-4"></i>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  雷達入庫
+                </span>
+              </div>
+              <div class="font-black text-xs text-slate-800 group-hover:text-emerald-700 transition-colors">
+                開始掃描收錄
+              </div>
+              <div class="text-[10px] text-slate-500 font-medium mt-0.5">
+                周邊地圖真實名單
+              </div>
+            </button>
+
+            <!-- 右邊：粉橘甜杏暖色亮色質感按鈕 -->
+            <button id="btn-ai-draw" class="group relative overflow-hidden rounded-2xl border-2 border-amber-200/90 bg-gradient-to-b from-white via-amber-50/40 to-orange-50/60 p-3.5 shadow-md shadow-amber-900/5 transition duration-200 hover:border-amber-300 hover:shadow-lg hover:shadow-orange-500/10 active:scale-[0.98] text-left">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-orange-500 via-amber-500 to-rose-400 text-white shadow-md shadow-orange-500/25">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800">
+                  Gemini
+                </span>
+              </div>
+              <div class="font-black text-xs text-slate-800 group-hover:text-orange-700 transition-colors">
+                AI 智能推薦
+              </div>
+              <div class="text-[10px] text-slate-500 font-medium mt-0.5">
+                情境與跨國名店挑選
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 2: 排順位與換一批 ==================== -->
+      <div id="step-2-view" class="hidden h-full flex flex-col bg-slate-50/50">
+        <div class="p-3 bg-white border-b border-slate-100 flex justify-between items-center shadow-sm shrink-0">
+          <div class="text-xs">
+            <span class="font-bold text-slate-800">👆 點擊卡片排 1、2、3 順位</span>
+            <span class="block text-[10px] text-slate-500">右上角可保留喜歡的，換掉其餘</span>
+          </div>
+          <button id="btn-reshuffle" class="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold rounded-xl flex items-center gap-1 border border-orange-200 transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 換一批
+          </button>
+        </div>
+
+        <div id="cards-container" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3 pb-24">
+          <!-- 抽出 5 家卡片動態塞入此處 -->
+        </div>
+
+        <div class="p-3 bg-white border-t border-slate-200 shadow-xl shrink-0">
+          <button id="btn-start-waterfall" class="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6A28] to-[#FF8C2B] text-white shadow-lg shadow-orange-500/25 active:scale-[0.99] transition">
+            🚀 啟動自動候補訂位 (<span id="priority-count-badge">3</span> 家)
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 3: 候補執行與日曆同步 ==================== -->
+      <div id="step-3-view" class="hidden h-full overflow-y-auto custom-scroll p-4 space-y-4 pb-20 bg-slate-50/50">
+        
+        <!-- 候補日誌面板 -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <h2 class="text-xs font-black text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2 mb-2.5">
+            <i data-lucide="compass" class="w-4 h-4 text-orange-500"></i> 候補流程即時進度
+          </h2>
+          <div id="booking-logs" class="space-y-1.5 text-[11px]">
+            <!-- 日誌訊息 -->
+          </div>
+        </div>
+
+        <!-- 撥號與切換操作卡片 -->
+        <div id="action-call-card" class="bg-white border-2 border-orange-400 rounded-3xl p-5 shadow-lg space-y-3">
+          <div class="inline-block px-3 py-1 bg-orange-600 text-white text-[10px] font-black rounded-full">
+            目前嘗試：第 <span id="current-rank-display">1</span> 順位
+          </div>
+          <h3 id="current-shop-name" class="font-black text-xl text-slate-900">餐廳名稱</h3>
+          
+          <div class="space-y-2 pt-1">
+            <a id="btn-direct-call" href="tel:" class="flex items-center justify-center gap-2 w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-sm shadow-md transition active:scale-[0.98]">
+              <i data-lucide="phone-call" class="w-4 h-4"></i> 一鍵撥打電話 / 前往 Inline
+            </a>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn-mark-success" class="py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-xs shadow-md transition active:scale-[0.98]">
+                ✅ 已訂到位！
+              </button>
+              <button id="btn-next-priority" class="py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-xs shadow-md transition active:scale-[0.98]">
+                ❌ 客滿，換下一家
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 成功確認卡片 -->
+        <div id="success-card" class="hidden bg-white border-2 border-emerald-500 rounded-3xl p-5 shadow-lg space-y-3 animate-fadeIn">
+          <div class="inline-block px-3 py-1 bg-emerald-600 text-white text-[10px] font-black rounded-full">
+            🎉 訂位確認成功！
+          </div>
+          <h3 id="success-shop-name" class="font-black text-xl text-slate-900">餐廳名稱</h3>
+          <p id="success-shop-meta" class="text-xs text-slate-500 font-bold">日期 時間 (位數)</p>
+          
+          <div class="space-y-2 pt-3 border-t border-slate-100">
+            <a id="btn-add-calendar" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm shadow-md transition">
+              <i data-lucide="calendar" class="w-4 h-4"></i> 📅 加入 Google 日曆 (同步邀請老婆)
+            </a>
+            <a id="btn-open-maps" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-xs transition">
+              <i data-lucide="navigation" class="w-4 h-4"></i> 🗺️ Google 地圖導航
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- 地標快選 Modal 彈窗 -->
+    <div id="landmarks-modal" class="hidden absolute inset-0 bg-black/50 z-50 flex items-end justify-center pb-8 p-3">
+      <div class="bg-white w-full max-w-sm max-h-[70vh] rounded-3xl p-5 overflow-y-auto shadow-2xl space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+          <h3 class="font-black text-sm text-slate-800 flex items-center gap-1.5">
+            <i data-lucide="map" class="w-4 h-4 text-blue-500"></i> 快速選擇竹北/新竹商圈
+          </h3>
+          <button id="btn-close-landmarks" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        </div>
+        <div class="grid grid-cols-1 gap-2" id="landmarks-list">
+          <!-- 地標清單由 JS 填入 -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 應用程式核心邏輯腳本 -->
+  <script>
+    // ==========================================
+    // 1. 常數與精選名店庫
+    // ==========================================
+    const CATEGORIES = [
+      { id: 'hotpot', name: '🍲 火鍋/壽喜燒' },
+      { id: 'steak', name: '🥩 牛排/鐵板燒' },
+      { id: 'yakiniku', name: '🔥 燒肉/居酒屋' },
+      { id: 'japanese', name: '🍣 日式/拉麵/定食' },
+      { id: 'western', name: '🍝 義式/披薩/餐酒' },
+      { id: 'taiwanese', name: '🥢 台菜/熱炒/中式' },
+      { id: 'brunch', name: '🥞 早午餐/咖啡' },
+      { id: 'southeast', name: '🌶️ 泰越/南洋料理' },
+      { id: 'dumpling', name: '🥟 水餃/麵食' },
+      { id: 'braised', name: '🍢 滷味/小吃/便當' },
+      { id: 'fried_bbq', name: '🍗 炸物/烤肉串' }
+    ];
+
+    const LANDMARKS = [
+      { name: '🚄 竹北高鐵特區', lat: 24.8080, lng: 121.0400 },
+      { name: '🛍️ 遠百竹北 / 莊敬商圈', lat: 24.8230, lng: 121.0230 },
+      { name: '🍴 竹北光明美食商圈', lat: 24.8280, lng: 121.0130 },
+      { name: '🏬 新竹巨城 (Big City)', lat: 24.8090, lng: 120.9750 },
+      { name: '🏮 新竹城隍廟商圈', lat: 24.8040, lng: 120.9650 },
+      { name: '🎓 清大夜市 / 建功商圈', lat: 24.7950, lng: 120.9960 },
+      { name: '🏘️ 新竹關新路商圈', lat: 24.7860, lng: 121.0180 }
+    ];
+
+    const INITIAL_RESTAURANTS = [
+      // 竹北光明與遠百商圈
+      { id: 'r1', name: '青花驕麻辣鍋 (竹北光明店)', cat: 'hotpot', price: 3, rating: 4.8, reviews: 5200, lat: 24.8288, lng: 121.0140, addr: '竹北市光明一路206號', phone: '03-558-8669', tag: '青花椒麻辣、果凍鴨血', bookingType: 'inline' },
+      { id: 'r2', name: '這一鍋皇室秘藏鍋物 (竹北光明店)', cat: 'hotpot', price: 3, rating: 4.6, reviews: 4800, lat: 24.8285, lng: 121.0110, addr: '竹北市光明一路288號', phone: '03-657-5151', tag: '老火湯、神仙牛肉', bookingType: 'inline' },
+      { id: 'r3', name: '海底撈火鍋 (竹北遠百店)', cat: 'hotpot', price: 3, rating: 4.8, reviews: 8500, lat: 24.8230, lng: 121.0230, addr: '竹北市莊敬北路18號', phone: '03-658-0000', tag: '變臉撈麵、無微不至服務', bookingType: 'inline' },
+      { id: 'r4', name: '嗑肉石鍋 (竹北莊敬店)', cat: 'hotpot', price: 2, rating: 4.7, reviews: 3200, lat: 24.8225, lng: 121.0245, addr: '竹北市莊敬五街', phone: '03-668-8888', tag: '肉瀑布、澎湃蔬菜吧', bookingType: 'inline' },
+      { id: 'r5', name: '石二鍋 (竹北家樂福店)', cat: 'hotpot', price: 1, rating: 4.4, reviews: 3200, lat: 24.8260, lng: 121.0105, addr: '竹北市縣政九路155號', phone: '03-558-5122', tag: '平價小火鍋、冬瓜檸檬', bookingType: 'phone' },
+      { id: 'r6', name: '六扇門時尚湯鍋 (竹北三民店)', cat: 'hotpot', price: 1, rating: 4.2, reviews: 1980, lat: 24.8340, lng: 121.0120, addr: '竹北市三民路', phone: '03-551-6688', tag: '百元鍋物、冰淇淋吧', bookingType: 'phone' },
+      { id: 'r7', name: '教父牛排 Top Cap (竹北店)', cat: 'steak', price: 3, rating: 4.6, reviews: 2280, lat: 24.8120, lng: 121.0290, addr: '竹北市文興路一段59號', phone: '03-668-5828', tag: '米其林乾式熟成牛排', bookingType: 'inline' },
+      { id: 'r8', name: '夏慕尼新香榭鐵板燒 (竹北光明)', cat: 'steak', price: 3, rating: 4.7, reviews: 5560, lat: 24.8285, lng: 121.0138, addr: '竹北市光明一路128號', phone: '03-657-0648', tag: '浪漫法式鐵板燒', bookingType: 'inline' },
+      { id: 'r9', name: '史坦利美式牛排 (竹北成功店)', cat: 'steak', price: 2, rating: 4.5, reviews: 3820, lat: 24.8195, lng: 121.0215, addr: '竹北市成功二街142號', phone: '03-550-8018', tag: '舒肥炭烤、超高CP值', bookingType: 'inline' },
+      { id: 'r10', name: '瀧厚炙燒熟成牛排 (竹北遠百)', cat: 'steak', price: 2, rating: 4.4, reviews: 2450, lat: 24.8225, lng: 121.0230, addr: '竹北市莊敬北路18號', phone: '03-550-6669', tag: '熟成牛排、牛肉羅宋湯無限喝', bookingType: 'inline' },
+      { id: 'r11', name: '大埔鐵板燒 (竹北三民店)', cat: 'steak', price: 1, rating: 4.0, reviews: 1720, lat: 24.8340, lng: 121.0110, addr: '竹北市三民路256號', phone: '03-551-8228', tag: '平價現炒、重口味下飯', bookingType: 'phone' },
+      { id: 'r12', name: '茶六燒肉堂 (竹北遠百店)', cat: 'yakiniku', price: 3, rating: 4.8, reviews: 5320, lat: 24.8228, lng: 121.0235, addr: '竹北市莊敬北路18號', phone: '03-550-6622', tag: '極品和牛、精緻燒肉套餐', bookingType: 'inline' },
+      { id: 'r13', name: '森森燒肉 (竹北莊敬店)', cat: 'yakiniku', price: 3, rating: 4.9, reviews: 6850, lat: 24.8210, lng: 121.0235, addr: '竹北市莊敬南路29號', phone: '03-667-3199', tag: '法式甜點吧無限續', bookingType: 'inline' },
+      { id: 'r14', name: '胡同燒肉 夜食 (竹北店)', cat: 'yakiniku', price: 3, rating: 4.7, reviews: 1800, lat: 24.8250, lng: 121.0150, addr: '竹北市縣政二路', phone: '03-657-5222', tag: '吧台專人代烤、牛舌必點', bookingType: 'inline' },
+      { id: 'r15', name: '燒肉Smile (竹北文興店)', cat: 'yakiniku', price: 2, rating: 4.6, reviews: 2800, lat: 24.8095, lng: 121.0285, addr: '竹北市文興路一段182號', phone: '03-668-3322', tag: '一人獨享平價燒肉', bookingType: 'inline' },
+      { id: 'r16', name: '廢材串燒酒場 Skewers & Beer', cat: 'yakiniku', price: 2, rating: 4.9, reviews: 1800, lat: 24.8220, lng: 121.0230, addr: '竹北市莊敬三路120號', phone: '03-668-5025', tag: '遠百周邊人氣串燒', bookingType: 'inline' },
+      { id: 'r17', name: '藏壽司 Kura Sushi (竹北文興)', cat: 'japanese', price: 1, rating: 4.4, reviews: 3550, lat: 24.8110, lng: 121.0270, addr: '竹北市文興路一段166號', phone: '03-667-2201', tag: '壽司扭蛋、家庭最愛', bookingType: 'inline' },
+      { id: 'r18', name: '嵐沺拉麵 (竹北勝利店)', cat: 'japanese', price: 2, rating: 4.5, reviews: 1950, lat: 24.8238, lng: 121.0240, addr: '竹北市勝利二路118號', phone: '03-558-9211', tag: '濃厚雞白湯拉麵', bookingType: 'phone' },
+      { id: 'r19', name: '薄多義 Bite 2 Eat (竹北店)', cat: 'western', price: 2, rating: 4.6, reviews: 3550, lat: 24.8284, lng: 121.0142, addr: '竹北市光明一路', phone: '03-657-3878', tag: '手工披薩、香脆炸雞翅', bookingType: 'inline' },
+      { id: 'r20', name: '開飯川食堂 (竹北光明店)', cat: 'taiwanese', price: 2, rating: 4.8, reviews: 4820, lat: 24.8282, lng: 121.0135, addr: '竹北市光明一路256號', phone: '03-657-2177', tag: '流口水雞、香辣下飯川菜', bookingType: 'inline' },
+      { id: 'r21', name: '十一街麵食館 (竹北總店)', cat: 'dumpling', price: 1, rating: 4.2, reviews: 7120, lat: 24.8286, lng: 121.0125, addr: '竹北市光明一路275號', phone: '03-553-9368', tag: '招牌葫蘆水餃、牛肉捲餅', bookingType: 'phone' },
+      { id: 'r22', name: '黑皮驊魯肉飯 (竹北高鐵)', cat: 'braised', price: 1, rating: 4.5, reviews: 3620, lat: 24.8350, lng: 121.0030, addr: '竹北市嘉興路150號', phone: '03-658-7112', tag: '黑金膠質滷肉飯', bookingType: 'phone' },
+      { id: 'r23', name: '車庫鹽酥雞 (竹北莊敬)', cat: 'fried_bbq', price: 2, rating: 4.4, reviews: 2180, lat: 24.8215, lng: 121.0225, addr: '竹北市莊敬三路', phone: '03-667-6066', tag: '室內冷氣聚餐、現炸鹹酥雞', bookingType: 'phone' }
+    ];
+
+    // ==========================================
+    // 2. 狀態管理
+    // ==========================================
+    const state = {
+      step: 1,
+      userCoords: { lat: 24.8080, lng: 121.0400 }, // 預設竹北高鐵
+      locationLabel: '📍 預設位置：竹北高鐵特區',
+      radiusKm: 1.5,
+      nearbyPriority: true,
+      inlineOnly: false,
+      selectedPrices: [2], // 預設中價位
+      selectedCats: [],    // 預設無勾選
+      
+      googleApiKey: localStorage.getItem('GOOGLE_PLACES_KEY') || '',
+      geminiApiKey: localStorage.getItem('GEMINI_API_KEY') || '',
+      wifeEmail: localStorage.getItem('WIFE_EMAIL') || '',
+      
+      dynamicShops: [],
+      drawnShops: [],
+      pinnedIds: [],
+      priorities: [],
+      seenIds: [],
+      
+      currentTryIdx: 0,
+      isBooked: false,
+      securedShop: null,
+      bookingLogs: []
+    };
+
+    // ==========================================
+    // 3. 工具運算
+    // ==========================================
+    function getDistanceKm(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return +(R * c).toFixed(1);
+    }
+
+    function getEligiblePool() {
+      const combined = [...INITIAL_RESTAURANTS];
+      state.dynamicShops.forEach(dyn => {
+        if (!combined.some(s => s.name === dyn.name)) combined.push(dyn);
+      });
+
+      let pool = combined.map(s => ({
+        ...s,
+        distance: getDistanceKm(state.userCoords.lat, state.userCoords.lng, s.lat, s.lng)
+      }));
+
+      if (state.selectedCats.length > 0) pool = pool.filter(s => state.selectedCats.includes(s.cat));
+      if (state.selectedPrices.length > 0) pool = pool.filter(s => state.selectedPrices.includes(s.price));
+      if (state.inlineOnly) pool = pool.filter(s => s.bookingType === 'inline');
+      if (state.nearbyPriority) pool = pool.filter(s => s.distance <= state.radiusKm);
+
+      return pool;
+    }
+
+    function updateEligibleCountUI() {
+      const count = getEligiblePool().length;
+      document.getElementById('eligible-count').textContent = count;
+    }
+
+    // ==========================================
+    // 4. UI 渲染與互動綁定
+    // ==========================================
+    function initUI() {
+      // 填入儲存的金鑰
+      document.getElementById('input-google-key').value = state.googleApiKey;
+      document.getElementById('input-gemini-key').value = state.geminiApiKey;
+      document.getElementById('input-wife-email').value = state.wifeEmail;
+
+      // 預設日期時間
+      const now = new Date();
+      document.getElementById('booking-date').value = now.toISOString().split('T')[0];
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(Math.ceil(now.getMinutes() / 15) * 15 % 60).padStart(2, '0');
+      document.getElementById('booking-time').value = `${h}:${m}`;
+
+      // 渲染分類按鈕
+      const catGrid = document.getElementById('category-grid');
+      catGrid.innerHTML = '';
+      CATEGORIES.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = `p-2 rounded-xl text-xs font-bold border text-left transition flex justify-between items-center bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100`;
+        btn.dataset.catId = c.id;
+        btn.innerHTML = `<span>${c.name}</span><span class="check-icon hidden">✓</span>`;
+        btn.onclick = () => {
+          if (state.selectedCats.includes(c.id)) {
+            state.selectedCats = state.selectedCats.filter(id => id !== c.id);
+            btn.className = `p-2 rounded-xl text-xs font-bold border text-left transition flex justify-between items-center bg-slate-50 border-slate-200 text-slate-700`;
+            btn.querySelector('.check-icon').classList.add('hidden');
+          } else {
+            state.selectedCats.push(c.id);
+            btn.className = `p-2 rounded-xl text-xs font-bold border text-left transition flex justify-between items-center bg-[#FF6A28] text-white border-[#FF6A28] shadow-sm`;
+            btn.querySelector('.check-icon').classList.remove('hidden');
+          }
+          updateEligibleCountUI();
+        };
+        catGrid.appendChild(btn);
+      });
+
+      // 渲染地標清單
+      const landmarksList = document.getElementById('landmarks-list');
+      landmarksList.innerHTML = '';
+      LANDMARKS.forEach(lm => {
+        const item = document.createElement('button');
+        item.className = 'p-3 text-xs font-black text-slate-800 bg-slate-50 hover:bg-orange-50 border border-slate-200 rounded-xl text-left transition';
+        item.textContent = lm.name;
+        item.onclick = () => {
+          state.userCoords = { lat: lm.lat, lng: lm.lng };
+          state.locationLabel = `📍 ${lm.name}`;
+          document.getElementById('current-location-display').textContent = state.locationLabel;
+          document.getElementById('landmarks-modal').classList.add('hidden');
+          updateEligibleCountUI();
+        };
+        landmarksList.appendChild(item);
+      });
+
+      bindEvents();
+      updateEligibleCountUI();
+      lucide.createIcons();
+    }
+
+    function bindEvents() {
+      // 齒輪設定開關
+      document.getElementById('btn-toggle-settings').onclick = () => {
+        document.getElementById('settings-panel').classList.toggle('hidden');
+      };
+      document.getElementById('btn-close-settings').onclick = () => {
+        document.getElementById('settings-panel').classList.add('hidden');
+      };
+
+      // 儲存金鑰變更
+      document.getElementById('input-google-key').onchange = (e) => {
+        state.googleApiKey = e.target.value.trim();
+        localStorage.setItem('GOOGLE_PLACES_KEY', state.googleApiKey);
+      };
+      document.getElementById('input-gemini-key').onchange = (e) => {
+        state.geminiApiKey = e.target.value.trim();
+        localStorage.setItem('GEMINI_API_KEY', state.geminiApiKey);
+      };
+      document.getElementById('input-wife-email').onchange = (e) => {
+        state.wifeEmail = e.target.value.trim();
+        localStorage.setItem('WIFE_EMAIL', state.wifeEmail);
+      };
+
+      // 導覽步驟切換
+      document.getElementById('nav-step-1').onclick = () => switchStep(1);
+      document.getElementById('nav-step-2').onclick = () => {
+        if (state.drawnShops.length > 0) switchStep(2);
+      };
+      document.getElementById('nav-step-3').onclick = () => {
+        if (state.priorities.length > 0) switchStep(3);
+      };
+
+      // 定位按鈕
+      document.getElementById('btn-gps').onclick = () => {
+        if ('geolocation' in navigator) {
+          const locDisplay = document.getElementById('current-location-display');
+          locDisplay.textContent = '⏳ 正在讀取手機 GPS 定位...';
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              state.userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+              state.locationLabel = `📍 GPS 定位 (${state.userCoords.lat.toFixed(3)}, ${state.userCoords.lng.toFixed(3)})`;
+              locDisplay.textContent = state.locationLabel;
+              updateEligibleCountUI();
+            },
+            () => {
+              locDisplay.textContent = '⚠️ 定位失敗，使用預設竹北高鐵中心';
+            },
+            { timeout: 8000 }
+          );
+        }
+      };
+
+      // 手動搜尋地址
+      document.getElementById('btn-custom-search').onclick = () => {
+        const val = document.getElementById('input-custom-location').value.trim();
+        if (val) {
+          state.locationLabel = `📍 自訂搜尋：${val}`;
+          document.getElementById('current-location-display').textContent = state.locationLabel;
+          document.getElementById('input-custom-location').value = '';
+        }
+      };
+
+      // 地標 Modal 開關
+      document.getElementById('btn-open-landmarks').onclick = () => {
+        document.getElementById('landmarks-modal').classList.remove('hidden');
+      };
+      document.getElementById('btn-close-landmarks').onclick = () => {
+        document.getElementById('landmarks-modal').classList.add('hidden');
+      };
+
+      // 距離優先切換
+      document.getElementById('toggle-nearby').onclick = () => {
+        state.nearbyPriority = !state.nearbyPriority;
+        document.getElementById('nearby-checkbox').textContent = state.nearbyPriority ? '✅' : '⬜';
+        document.getElementById('radius-selector').style.display = state.nearbyPriority ? 'flex' : 'none';
+        updateEligibleCountUI();
+      };
+
+      // 半徑選擇
+      document.querySelectorAll('.radius-btn').forEach(btn => {
+        btn.onclick = () => {
+          state.radiusKm = parseFloat(btn.dataset.radius);
+          document.querySelectorAll('.radius-btn').forEach(b => {
+            b.className = 'radius-btn flex-1 py-1.5 text-xs font-bold border rounded-lg bg-slate-50 text-slate-600 border-slate-200';
+          });
+          btn.className = 'radius-btn flex-1 py-1.5 text-xs font-bold border rounded-lg bg-[#FF6A28] text-white border-[#FF6A28] shadow-sm';
+          updateEligibleCountUI();
+        };
+      });
+
+      // Inline 過濾切換
+      document.getElementById('toggle-inline').onclick = () => {
+        state.inlineOnly = !state.inlineOnly;
+        document.getElementById('inline-checkbox').textContent = state.inlineOnly ? '✅' : '⬜';
+        updateEligibleCountUI();
+      };
+
+      // 價位切換
+      document.querySelectorAll('.price-btn').forEach(btn => {
+        btn.onclick = () => {
+          const p = parseInt(btn.dataset.price);
+          if (state.selectedPrices.includes(p)) {
+            if (state.selectedPrices.length > 1) {
+              state.selectedPrices = state.selectedPrices.filter(x => x !== p);
+              btn.className = 'price-btn p-2 rounded-xl border text-center transition bg-slate-50 text-slate-600 border-slate-200';
+            }
+          } else {
+            state.selectedPrices.push(p);
+            btn.className = 'price-btn p-2 rounded-xl border text-center transition bg-[#FF6A28] text-white border-[#FF6A28] shadow-sm';
+          }
+          updateEligibleCountUI();
+        };
+      });
+
+      // 分類全選 / 清除
+      document.getElementById('btn-select-all-cats').onclick = () => {
+        state.selectedCats = CATEGORIES.map(c => c.id);
+        document.querySelectorAll('#category-grid button').forEach(btn => {
+          btn.className = 'p-2 rounded-xl text-xs font-bold border text-left transition flex justify-between items-center bg-[#FF6A28] text-white border-[#FF6A28] shadow-sm';
+          btn.querySelector('.check-icon').classList.remove('hidden');
+        });
+        updateEligibleCountUI();
+      };
+      document.getElementById('btn-clear-cats').onclick = () => {
+        state.selectedCats = [];
+        document.querySelectorAll('#category-grid button').forEach(btn => {
+          btn.className = 'p-2 rounded-xl text-xs font-bold border text-left transition flex justify-between items-center bg-slate-50 border-slate-200 text-slate-700';
+          btn.querySelector('.check-icon').classList.add('hidden');
+        });
+        updateEligibleCountUI();
+      };
+
+      // 抽籤按鈕
+      document.getElementById('btn-draw').onclick = () => handleDraw(false);
+      document.getElementById('btn-reshuffle').onclick = () => handleDraw(true);
+
+      // 開始收錄周邊 (Google Maps Places API)
+      document.getElementById('btn-fetch-nearby').onclick = handleFetchGoogleNearby;
+
+      // Gemini AI 推薦
+      document.getElementById('btn-ai-draw').onclick = handleGeminiAIDraw;
+
+      // 啟動候補訂位
+      document.getElementById('btn-start-waterfall').onclick = handleStartWaterfall;
+
+      // 順位切換與成功標記
+      document.getElementById('btn-mark-success').onclick = () => {
+        const currentShop = state.drawnShops.find(s => s.id === state.priorities[state.currentTryIdx]);
+        state.isBooked = true;
+        state.securedShop = currentShop;
+        state.bookingLogs.push(`🎉 太棒了！【${currentShop.name}】已成功確認訂位！已為您停止後續候補。`);
+        renderStep3();
+      };
+
+      document.getElementById('btn-next-priority').onclick = () => {
+        const nextIdx = state.currentTryIdx + 1;
+        if (nextIdx < state.priorities.length) {
+          const nextShop = state.drawnShops.find(s => s.id === state.priorities[nextIdx]);
+          state.currentTryIdx = nextIdx;
+          state.bookingLogs.push(`❌ 第 ${nextIdx} 順位目前客滿或未撥通。`);
+          state.bookingLogs.push(`⚡ 自動切換至【第 ${nextIdx + 1} 順位：${nextShop?.name}】！`);
+          renderStep3();
+        } else {
+          state.bookingLogs.push(`⚠️ 前 ${state.priorities.length} 家皆未能確認座位，建議返回步驟 2 重新抽籤！`);
+          renderStep3();
+        }
+      };
+    }
+
+    function switchStep(stepNum) {
+      state.step = stepNum;
+      document.getElementById('step-1-view').classList.toggle('hidden', stepNum !== 1);
+      document.getElementById('step-2-view').classList.toggle('hidden', stepNum !== 2);
+      document.getElementById('step-3-view').classList.toggle('hidden', stepNum !== 3);
+
+      const navBtns = [document.getElementById('nav-step-1'), document.getElementById('nav-step-2'), document.getElementById('nav-step-3')];
+      navBtns.forEach((btn, idx) => {
+        if (idx + 1 === stepNum) {
+          btn.className = 'py-1.5 rounded-lg bg-white shadow-sm text-orange-600 border border-orange-200';
+        } else {
+          btn.className = 'py-1.5 rounded-lg text-slate-500 hover:text-slate-800';
+        }
+      });
+
+      if (stepNum === 2) renderStep2();
+      if (stepNum === 3) renderStep3();
+    }
+
+    // ==========================================
+    // 5. 抽籤、保留與排序邏輯
+    // ==========================================
+    function handleDraw(isReshuffle = false) {
+      const pool = getEligiblePool();
+      if (pool.length === 0) {
+        alert('目前條件下無相符餐廳，請放寬搜尋距離、多勾選幾項美食或取消僅限 Inline。');
+        return;
+      }
+
+      let lockedShops = [];
+      if (isReshuffle) {
+        lockedShops = state.drawnShops.filter(s => state.pinnedIds.includes(s.id) || state.priorities.includes(s.id));
+      }
+
+      const lockedIds = lockedShops.map(s => s.id);
+      const needed = 5 - lockedShops.length;
+      if (needed <= 0) return;
+
+      let available = pool.filter(s => !lockedIds.includes(s.id) && !state.seenIds.includes(s.id));
+      if (available.length < needed) {
+        available = pool.filter(s => !lockedIds.includes(s.id));
+        state.seenIds = [...lockedIds];
+      }
+
+      const shuffled = [...available].sort((a, b) => {
+        if (state.nearbyPriority) return a.distance - b.distance + (Math.random() * 1.5 - 0.75);
+        return Math.random() - 0.5;
+      });
+
+      const newAdditions = shuffled.slice(0, needed);
+      state.seenIds = Array.from(new Set([...state.seenIds, ...newAdditions.map(s => s.id)]));
+      state.drawnShops = [...lockedShops, ...newAdditions];
+
+      if (!isReshuffle) {
+        state.pinnedIds = [];
+        state.priorities = [];
+      }
+
+      switchStep(2);
+    }
+
+    function renderStep2() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+
+      state.drawnShops.forEach(shop => {
+        const pRank = state.priorities.indexOf(shop.id) + 1;
+        const isPinned = state.pinnedIds.includes(shop.id);
+
+        const card = document.createElement('div');
+        card.className = `rounded-2xl p-4 border-2 cursor-pointer transition bg-white shadow-sm ${
+          pRank > 0 ? 'border-orange-500 ring-2 ring-orange-100' : 'border-slate-200'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex gap-1.5 flex-wrap items-center">
+              ${pRank > 0 ? `<span class="text-[10px] font-black px-2 py-0.5 rounded text-white bg-orange-600">第 ${pRank} 順位</span>` : ''}
+              <span class="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
+                ${shop.price === 3 ? '💲💲💲 高檔' : shop.price === 2 ? '💲💲 中價' : '💲 平價'}
+              </span>
+              ${shop.bookingType === 'inline' ? '<span class="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded">📱 Inline</span>' : ''}
+            </div>
+            <button class="btn-pin text-[10px] font-bold px-2.5 py-1 rounded-lg border transition ${
+              isPinned ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-50 text-slate-500 border-slate-200'
+            }">
+              ${isPinned ? '📌 已保留' : '📌 保留'}
+            </button>
+          </div>
+          <h3 class="font-black text-base text-slate-900">${shop.name}</h3>
+          <p class="text-[11px] text-slate-500 font-bold mt-1">⭐ ${shop.rating} (${shop.reviews}) ‧ 📍 距離 ${shop.distance} km</p>
+          <p class="text-[11px] text-orange-700 font-bold mt-1.5 bg-orange-50 p-1.5 rounded-lg border border-orange-100">🔥 招牌/特色: ${shop.tag}</p>
+          <div class="mt-2 pt-2 border-t border-slate-100 text-[10px] font-mono text-slate-400 flex justify-between">
+            <span>📞 ${shop.phone}</span>
+            <span class="truncate max-w-[180px]">${shop.addr}</span>
+          </div>
+        `;
+
+        // 點擊整張卡片排順位
+        card.onclick = () => {
+          const rankIdx = state.priorities.indexOf(shop.id);
+          if (rankIdx !== -1) {
+            state.priorities.splice(rankIdx, 1);
+          } else {
+            if (state.priorities.length >= 3) {
+              alert('已選滿前 3 順位！若想更換請先取消既有選取。');
+              return;
+            }
+            state.priorities.push(shop.id);
+            if (!state.pinnedIds.includes(shop.id)) state.pinnedIds.push(shop.id);
+          }
+          renderStep2();
+        };
+
+        // 點擊保留按鈕
+        const pinBtn = card.querySelector('.btn-pin');
+        pinBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (state.pinnedIds.includes(shop.id)) {
+            state.pinnedIds = state.pinnedIds.filter(id => id !== shop.id);
+          } else {
+            state.pinnedIds.push(shop.id);
+          }
+          renderStep2();
+        };
+
+        container.appendChild(card);
+      });
+
+      document.getElementById('priority-count-badge').textContent = state.priorities.length || 3;
+    }
+
+    // ==========================================
+    // 6. 依序候補與日曆連動
+    // ==========================================
+    function handleStartWaterfall() {
+      if (state.priorities.length === 0) {
+        state.priorities = state.drawnShops.slice(0, 3).map(s => s.id);
+      }
+      state.currentTryIdx = 0;
+      state.isBooked = false;
+      state.securedShop = null;
+
+      const dateVal = document.getElementById('booking-date').value;
+      const timeVal = document.getElementById('booking-time').value;
+      const sizeVal = document.getElementById('party-size').value;
+      const firstShop = state.drawnShops.find(s => s.id === state.priorities[0]);
+
+      state.bookingLogs = [
+        `🚀 自動候補排程啟動！預計用餐：${dateVal} ${timeVal} (${sizeVal} 位)`,
+        `🎯 正在為您準備【第 1 順位：${firstShop?.name}】...`
+      ];
+
+      switchStep(3);
+    }
+
+    function renderStep3() {
+      const logsContainer = document.getElementById('booking-logs');
+      logsContainer.innerHTML = '';
+      state.bookingLogs.forEach(log => {
+        const item = document.createElement('div');
+        item.className = `p-2 rounded-lg font-bold ${
+          log.includes('✅') || log.includes('🎉')
+            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+            : log.includes('❌')
+            ? 'bg-rose-50 text-rose-800 border border-rose-200'
+            : 'bg-orange-50 text-orange-800 border border-orange-200'
+        }`;
+        item.textContent = log;
+        logsContainer.appendChild(item);
+      });
+
+      const callCard = document.getElementById('action-call-card');
+      const successCard = document.getElementById('success-card');
+
+      if (state.isBooked && state.securedShop) {
+        callCard.classList.add('hidden');
+        successCard.classList.remove('hidden');
+
+        document.getElementById('success-shop-name').textContent = state.securedShop.name;
+        const dateVal = document.getElementById('booking-date').value;
+        const timeVal = document.getElementById('booking-time').value;
+        const sizeVal = document.getElementById('party-size').value;
+        document.getElementById('success-shop-meta').textContent = `📅 ${dateVal} ${timeVal} ‧ 👥 ${sizeVal} 位成人 ‧ 📍 ${state.securedShop.addr}`;
+
+        // 綁定 Google Calendar 網址
+        const calUrl = buildGoogleCalendarUrl(state.securedShop, dateVal, timeVal, sizeVal);
+        document.getElementById('btn-add-calendar').href = calUrl;
+        document.getElementById('btn-open-maps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(state.securedShop.name + ' ' + state.securedShop.addr)}`;
+
+      } else if (state.priorities.length > 0 && state.currentTryIdx < state.priorities.length) {
+        callCard.classList.remove('hidden');
+        successCard.classList.add('hidden');
+
+        const activeShop = state.drawnShops.find(s => s.id === state.priorities[state.currentTryIdx]);
+        document.getElementById('current-rank-display').textContent = state.currentTryIdx + 1;
+        document.getElementById('current-shop-name').textContent = activeShop?.name || '店家名稱';
+        document.getElementById('btn-direct-call').href = `tel:${activeShop?.phone || ''}`;
+      }
+    }
+
+    function buildGoogleCalendarUrl(shop, dateStr, timeStr, size) {
+      if (!shop) return '#';
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hour, min] = timeStr.split(':').map(Number);
+      const pad = n => String(n).padStart(2, '0');
+      const startIso = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(min)}00`;
+      const endIso = `${year}${pad(month)}${pad(day)}T${pad(Math.min(23, hour + 2))}${pad(min)}00`;
+
+      const params = new URLSearchParams({
+        action: 'TEMPLATE',
+        text: `🍽️ 訂位確認：${shop.name} (${size}位)`,
+        dates: `${startIso}/${endIso}`,
+        details: `📍 店名：${shop.name}\n📞 電話：${shop.phone}\n🏠 地址：${shop.addr}\n🏷️ 標籤：${shop.tag}`,
+        location: shop.addr,
+        ctz: 'Asia/Taipei'
+      });
+      if (state.wifeEmail) params.append('add', state.wifeEmail);
+      return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    }
+
+    // ==========================================
+    // 7. 外部 API 整合 (Google Places & Gemini)
+    // ==========================================
+    async function handleFetchGoogleNearby() {
+      if (!state.googleApiKey.trim()) {
+        alert('請先點擊右上角 ⚙️ 設定，填入您的 Google Maps API Key 才能掃描周邊店家！');
+        document.getElementById('settings-panel').classList.remove('hidden');
+        return;
+      }
+
+      const locDisplay = document.getElementById('current-location-display');
+      locDisplay.textContent = '🌍 正在啟動全球雷達，掃描 Google Maps 周邊餐廳...';
+
+      try {
+        const res = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': state.googleApiKey.trim(),
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.primaryType,places.rating,places.userRatingCount,places.priceLevel,places.location,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri'
+          },
+          body: JSON.stringify({
+            maxResultCount: 20,
+            locationRestriction: {
+              circle: {
+                center: { latitude: state.userCoords.lat, longitude: state.userCoords.lng },
+                radius: state.radiusKm * 1000
+              }
+            }
+          })
+        });
+
+        const data = await res.json();
+        if (data.places && data.places.length > 0) {
+          const fetched = data.places
+            .filter(p => (p.rating || 0) >= 3.5)
+            .map(p => {
+              let cat = 'taiwanese';
+              const type = p.primaryType || '';
+              if (type.includes('steak')) cat = 'steak';
+              else if (type.includes('barbecue')) cat = 'yakiniku';
+              else if (type.includes('japanese') || type.includes('sushi') || type.includes('ramen')) cat = 'japanese';
+              else if (type.includes('italian') || type.includes('pizza')) cat = 'western';
+              else if (type.includes('cafe') || type.includes('brunch') || type.includes('coffee')) cat = 'brunch';
+              else if (type.includes('thai') || type.includes('vietnamese')) cat = 'southeast';
+
+              return {
+                id: p.id,
+                name: p.displayName?.text || '周邊名店',
+                cat: cat,
+                price: p.priceLevel === 'PRICE_LEVEL_EXPENSIVE' ? 3 : p.priceLevel === 'PRICE_LEVEL_MODERATE' ? 2 : 1,
+                rating: p.rating || 4.2,
+                reviews: p.userRatingCount || 0,
+                lat: p.location?.latitude || state.userCoords.lat,
+                lng: p.location?.longitude || state.userCoords.lng,
+                addr: p.formattedAddress || '周邊地址',
+                phone: p.nationalPhoneNumber || '無提供電話',
+                tag: '🌍 Google 即時雷達收錄',
+                bookingType: (p.websiteUri || '').includes('inline') ? 'inline' : 'phone'
+              };
+            });
+
+          state.dynamicShops = fetched;
+          locDisplay.textContent = `📍 雷達掃描成功！新收錄 ${fetched.length} 家在地餐廳`;
+          updateEligibleCountUI();
+          alert(`🎉 成功收錄 ${fetched.length} 家周邊真實餐廳名單！`);
+        } else {
+          locDisplay.textContent = `📍 周邊未搜尋到符合 3.5★ 條件之店家`;
+        }
+      } catch (err) {
+        console.error(err);
+        locDisplay.textContent = `⚠️ 雷達連線失敗，請檢查 API Key 是否正確啟用 Places API (New)`;
+      }
+    }
+
+    async function handleGeminiAIDraw() {
+      if (!state.geminiApiKey.trim()) {
+        alert('請先點擊右上角 ⚙️ 設定，填入免費 Gemini API Key 才能使用 AI 智能挑選！');
+        document.getElementById('settings-panel').classList.remove('hidden');
+        return;
+      }
+
+      const mood = document.getElementById('input-mood').value.trim();
+      const pool = getEligiblePool();
+      const btn = document.getElementById('btn-ai-draw');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span class="flex items-center gap-1.5 font-bold text-xs"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> AI 思考中...</span>`;
+      lucide.createIcons();
+
+      try {
+        const prompt = `我現在的心情/情境與地點是：「${mood || state.locationLabel}」。請幫我挑選或推薦最適合的 5 家餐廳。\n` +
+          `如果是在台灣新竹/竹北，請優先參考以下名單篩選：${JSON.stringify(pool.slice(0, 30).map(r => ({ id: r.id, name: r.name, phone: r.phone })))}\n` +
+          `⚠️ 重要：如果情境中提及外縣市或國外（如馬德里、東京、首爾），請直接運用全球知識庫推薦 5 家當地知名、真實存在的特色餐廳，並填妥所有 JSON 欄位（務必包含當地電話與地址）！`;
+
+        const payload = {
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'ARRAY',
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  id: { type: 'STRING' },
+                  name: { type: 'STRING' },
+                  cat: { type: 'STRING' },
+                  price: { type: 'NUMBER' },
+                  rating: { type: 'NUMBER' },
+                  reviews: { type: 'NUMBER' },
+                  distance: { type: 'NUMBER' },
+                  phone: { type: 'STRING' },
+                  tag: { type: 'STRING' },
+                  bookingType: { type: 'STRING' },
+                  addr: { type: 'STRING' }
+                },
+                required: ['id', 'name', 'cat', 'price', 'rating', 'reviews', 'distance', 'phone', 'tag', 'bookingType', 'addr']
+              }
+            }
+          },
+          systemInstruction: { parts: [{ text: '你是一個專業的美食助理。請直接回傳精選 5 家餐廳的 JSON 陣列，不帶多餘註解。' }] }
+        };
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.geminiApiKey.trim()}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.candidates && data.candidates[0].content) {
+          const aiShops = JSON.parse(data.candidates[0].content.parts[0].text);
+          state.drawnShops = aiShops.slice(0, 5);
+          state.pinnedIds = [];
+          state.priorities = [];
+          switchStep(2);
+        } else {
+          throw new Error('AI 回應格式未符預期');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Gemini 智能推薦暫時無法連線，已為您自動切換至一般隨機盲抽。');
+        handleDraw(false);
+      } finally {
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }
+    }
+
+    // 啟動頁面
+    window.onload = initUI;
+  </script>
+</body>
+</html>
