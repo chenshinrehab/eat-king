@@ -123,9 +123,6 @@
               <i data-lucide="map-pin" class="w-3.5 h-3.5 text-rose-500"></i> 設定起點位置
             </span>
             <div class="flex gap-1.5">
-              <button id="btn-gps" class="text-[11px] font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 py-1 rounded-lg flex items-center gap-1 border border-rose-200 transition">
-                <i data-lucide="navigation" class="w-3 h-3"></i> 📍 定位現在位子
-              </button>
               <button id="btn-open-map-picker" class="text-[11px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg flex items-center gap-1 border border-blue-200 transition">
                 <i data-lucide="map" class="w-3 h-3"></i> 🗺️ Google 地圖選點
               </button>
@@ -134,7 +131,7 @@
           
           <div id="current-location-display" class="text-[11px] text-orange-700 font-bold bg-orange-50/80 px-2.5 py-2 rounded-lg border border-orange-200/60 truncate flex items-center justify-between">
             <span id="location-text">📍 預設位置：竹北市莊敬三路360號</span>
-            <span class="text-[10px] text-slate-400 font-normal">點按鈕可換點</span>
+            <span class="text-[10px] text-slate-400 font-normal">點右側選點可換</span>
           </div>
 
           <!-- 搜尋半徑選單 -->
@@ -415,42 +412,6 @@
       </div>
     </div>
 
-    <!-- 定位失敗權限問題引導 Modal 彈窗 -->
-    <div id="permission-modal" class="hidden absolute inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fadeIn">
-      <div class="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-3.5 border border-rose-100">
-        <div class="flex items-center gap-2.5 text-rose-600">
-          <div class="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center shrink-0 border border-rose-200">
-            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-          </div>
-          <div>
-            <h3 class="font-black text-sm text-slate-900 leading-tight">定位提示：未取得 GPS 權限</h3>
-            <p class="text-[11px] text-rose-600 font-bold mt-0.5">系統已自動為您切換至莊敬三路 360 號</p>
-          </div>
-        </div>
-
-        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-2 text-slate-700 leading-relaxed">
-          <p class="font-bold text-slate-900">💡 如何開啟手機瀏覽器定位：</p>
-          <div class="space-y-1 text-[11px]">
-            <p><strong>🍎 iPhone (Safari)：</strong></p>
-            <p class="pl-2 text-slate-600">點網址列左側 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">大小</span> 或 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">aA</span> ➔ 網站設定 ➔ 將「位置」改為「允許」。</p>
-          </div>
-          <div class="space-y-1 text-[11px] pt-1 border-t border-slate-200">
-            <p><strong>🤖 Android (Chrome)：</strong></p>
-            <p class="pl-2 text-slate-600">點網址列左側的 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">🔒 鎖頭</span> ➔ 權限 ➔ 開啟「位置資訊」。</p>
-          </div>
-        </div>
-
-        <div class="flex gap-2 pt-1">
-          <button id="btn-close-permission" class="flex-1 py-2.5 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl active:scale-95 transition">
-            我知道了
-          </button>
-          <button id="btn-retry-gps" class="flex-1 py-2.5 bg-rose-600 text-white text-xs font-black rounded-xl shadow-md active:scale-95 transition">
-            重新嘗試定位
-          </button>
-        </div>
-      </div>
-    </div>
-
   </div>
 
   <!-- 應用程式核心邏輯腳本 -->
@@ -610,6 +571,9 @@
     // 4. UI 渲染與互動綁定
     // ==========================================
     function initUI() {
+      // 初始化歷史堆疊狀態，防止手機上一頁直接退出網頁
+      history.replaceState({ step: 1, modal: null }, '');
+
       document.getElementById('input-google-key').value = state.googleApiKey;
       document.getElementById('input-gemini-key').value = state.geminiApiKey;
       document.getElementById('input-wife-email').value = state.wifeEmail;
@@ -643,38 +607,9 @@
       });
 
       bindEvents();
+      bindHistoryNavigation();
       updateEligibleCountUI();
       lucide.createIcons();
-    }
-
-    function requestUserGPS() {
-      const locText = document.getElementById('location-text');
-      if ('geolocation' in navigator) {
-        locText.textContent = '⏳ 正在讀取手機 GPS 定位...';
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            state.userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            state.locationLabel = `📍 GPS 定位 (${state.userCoords.lat.toFixed(4)}, ${state.userCoords.lng.toFixed(4)})`;
-            locText.textContent = state.locationLabel;
-            updateEligibleCountUI();
-          },
-          (err) => {
-            console.warn('GPS 定位提醒：', err);
-            state.userCoords = { ...DEFAULT_COORDS };
-            state.locationLabel = '📍 已自動設為：竹北市莊敬三路360號';
-            locText.textContent = state.locationLabel;
-            updateEligibleCountUI();
-            document.getElementById('permission-modal').classList.remove('hidden');
-          },
-          { timeout: 7000, enableHighAccuracy: false, maximumAge: 60000 }
-        );
-      } else {
-        state.userCoords = { ...DEFAULT_COORDS };
-        state.locationLabel = '📍 瀏覽器無定位支援，已定位：竹北市莊敬三路360號';
-        locText.textContent = state.locationLabel;
-        updateEligibleCountUI();
-        document.getElementById('permission-modal').classList.remove('hidden');
-      }
     }
 
     // ==========================================
@@ -720,6 +655,7 @@
       pendingCoords = { ...state.userCoords };
       updateCoordsDisplay(pendingCoords.lat, pendingCoords.lng);
       document.getElementById('map-modal').classList.remove('hidden');
+      history.pushState({ step: state.step, modal: 'map' }, '');
 
       loadGoogleMapsScript(() => {
         const container = document.getElementById('interactive-map');
@@ -768,7 +704,12 @@
 
     function bindEvents() {
       document.getElementById('btn-toggle-settings').onclick = () => {
-        document.getElementById('settings-panel').classList.toggle('hidden');
+        const panel = document.getElementById('settings-panel');
+        const willOpen = panel.classList.contains('hidden');
+        panel.classList.toggle('hidden');
+        if (willOpen) {
+          history.pushState({ step: state.step, modal: 'settings' }, '');
+        }
       };
       document.getElementById('btn-close-settings').onclick = () => {
         document.getElementById('settings-panel').classList.add('hidden');
@@ -786,9 +727,6 @@
         state.wifeEmail = e.target.value.trim();
         localStorage.setItem('WIFE_EMAIL', state.wifeEmail);
       };
-
-      // 定位按鈕
-      document.getElementById('btn-gps').onclick = () => requestUserGPS();
 
       // 地圖按鈕
       document.getElementById('btn-open-map-picker').onclick = openMapPicker;
@@ -811,15 +749,6 @@
         document.getElementById('location-text').textContent = state.locationLabel;
         document.getElementById('map-modal').classList.add('hidden');
         updateEligibleCountUI();
-      };
-
-      // 權限 Modal
-      document.getElementById('btn-close-permission').onclick = () => {
-        document.getElementById('permission-modal').classList.add('hidden');
-      };
-      document.getElementById('btn-retry-gps').onclick = () => {
-        document.getElementById('permission-modal').classList.add('hidden');
-        requestUserGPS();
       };
 
       // 半徑選單
@@ -918,7 +847,36 @@
       document.getElementById('nav-step-3').onclick = () => { if (state.priorities.length > 0) switchStep(3); };
     }
 
-    function switchStep(stepNum) {
+    // 手機實體/手勢返回鍵攔截與狀態切換
+    function bindHistoryNavigation() {
+      window.addEventListener('popstate', (e) => {
+        const mapModal = document.getElementById('map-modal');
+        const settingsPanel = document.getElementById('settings-panel');
+
+        // 1. 若有開啟彈窗，先關閉彈窗
+        if (mapModal && !mapModal.classList.contains('hidden')) {
+          mapModal.classList.add('hidden');
+          return;
+        }
+        if (settingsPanel && !settingsPanel.classList.contains('hidden')) {
+          settingsPanel.classList.add('hidden');
+          return;
+        }
+
+        // 2. 若在第 3 步，返回第 2 步；若在第 2 步，返回第 1 步
+        if (e.state && typeof e.state.step === 'number') {
+          switchStep(e.state.step, false);
+        } else if (state.step > 1) {
+          switchStep(state.step - 1, false);
+        }
+      });
+    }
+
+    function switchStep(stepNum, pushHistory = true) {
+      if (pushHistory && stepNum !== state.step) {
+        history.pushState({ step: stepNum, modal: null }, '');
+      }
+
       state.step = stepNum;
       document.getElementById('step-1-view').classList.toggle('hidden', stepNum !== 1);
       document.getElementById('step-2-view').classList.toggle('hidden', stepNum !== 2);
