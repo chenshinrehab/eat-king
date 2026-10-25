@@ -1215,11 +1215,21 @@
           systemInstruction: { parts: [{ text: '你是一個專業的美食助理。請直接回傳精選 5 家餐廳的 JSON 陣列，不帶多餘註解。' }] }
         };
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.geminiApiKey.trim()}`, {
+        // 優先使用 gemini-3.5-flash-lite，失敗自動降級到 gemini-3.1-flash-lite
+        let res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${state.geminiApiKey.trim()}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+
+        if (!res.ok) {
+          console.warn('Gemini 3.5 Flash-Lite 呼叫失敗，嘗試切換至 Gemini 3.1 Flash-Lite...');
+          res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${state.geminiApiKey.trim()}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
 
         const data = await res.json();
         if (data.candidates && data.candidates[0].content) {
@@ -1233,7 +1243,7 @@
         }
       } catch (err) {
         console.error(err);
-        alert('Gemini 智能推薦暫時無法連線，已為您自動切換至一般隨機盲抽。');
+        alert('Gemini 智能推薦連線異常，已為您自動切換至一般隨機盲抽。');
         handleDraw(false);
       } finally {
         btn.innerHTML = originalText;
