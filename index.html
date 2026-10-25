@@ -15,9 +15,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Leaflet 互動式地圖（支援放圖釘） -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
     body {
@@ -32,10 +29,19 @@
       scrollbar-width: none;
     }
     #interactive-map {
-      height: 380px;
+      height: 360px;
       width: 100%;
       border-radius: 1rem;
-      z-index: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .map-crosshair {
+      pointer-events: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -100%);
+      z-index: 10;
     }
   </style>
 </head>
@@ -47,7 +53,6 @@
     <!-- 頂部 Header -->
     <header class="bg-gradient-to-r from-[#FF7A38] via-[#FF9238] to-[#FFA842] text-white px-5 pt-4 pb-3 shadow-md z-20 flex justify-between items-center shrink-0">
       <div class="flex items-center gap-2.5">
-        <!-- 迷你版 App 圖標徽章 -->
         <div class="w-9 h-9 rounded-xl bg-white shadow-md flex items-center justify-center p-1 border border-white/40 shrink-0">
           <svg viewBox="0 0 100 100" class="w-full h-full">
             <circle cx="50" cy="50" r="46" fill="#FFF2E5" />
@@ -84,8 +89,8 @@
             class="w-full text-xs p-2.5 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-orange-400 focus:bg-white" />
         </div>
         <div class="pt-2 border-t border-slate-100">
-          <label class="text-[11px] font-bold text-emerald-800 block mb-0.5">🌍 全球雷達 (Google Maps API Key)</label>
-          <p class="text-[10px] text-slate-400 mb-1">輸入後點「開始掃描收錄」，即時匯入周邊真實現役餐廳。</p>
+          <label class="text-[11px] font-bold text-emerald-800 block mb-0.5">🌍 全球雷達 / 原廠地圖 (Google Maps API Key)</label>
+          <p class="text-[10px] text-slate-400 mb-1">輸入後可直接在網頁內載入原廠 Google Maps 互動圖台與掃描周邊店家。</p>
           <input type="password" id="input-google-key" placeholder="AIzaSy..."
             class="w-full text-xs p-2.5 border border-emerald-200 rounded-xl bg-emerald-50/40 outline-none focus:border-emerald-500 focus:bg-white" />
         </div>
@@ -122,14 +127,14 @@
                 <i data-lucide="navigation" class="w-3 h-3"></i> 📍 定位現在位子
               </button>
               <button id="btn-open-map-picker" class="text-[11px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg flex items-center gap-1 border border-blue-200 transition">
-                <i data-lucide="map" class="w-3 h-3"></i> 🗺️ 地圖放圖釘
+                <i data-lucide="map" class="w-3 h-3"></i> 🗺️ Google 地圖選點
               </button>
             </div>
           </div>
           
           <div id="current-location-display" class="text-[11px] text-orange-700 font-bold bg-orange-50/80 px-2.5 py-2 rounded-lg border border-orange-200/60 truncate flex items-center justify-between">
             <span id="location-text">📍 預設位置：竹北市莊敬三路360號</span>
-            <span class="text-[10px] text-slate-400 font-normal">點上方按鈕可換位置</span>
+            <span class="text-[10px] text-slate-400 font-normal">點按鈕可換點</span>
           </div>
 
           <!-- 搜尋半徑選單 -->
@@ -229,12 +234,10 @@
 
         <!-- 抽籤與雙亮色卡片按鈕區 -->
         <div class="pt-1 pb-6 space-y-3">
-          <!-- 盲抽大按鈕 -->
           <button id="btn-draw" class="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6A28] to-[#FF8C2B] text-white shadow-lg shadow-orange-500/25 active:scale-[0.99] transition">
             🎲 交給命運！隨機盲抽 5 家
           </button>
 
-          <!-- 亮色質感雙按鈕 -->
           <div class="grid grid-cols-2 gap-3 pt-0.5">
             <!-- 左邊：清爽薄荷青檸亮色質感按鈕 -->
             <button id="btn-fetch-nearby" class="group relative overflow-hidden rounded-2xl border-2 border-emerald-200/90 bg-gradient-to-b from-white via-emerald-50/40 to-teal-50/60 p-3.5 shadow-md shadow-emerald-900/5 transition duration-200 hover:border-emerald-300 hover:shadow-lg hover:shadow-teal-500/10 active:scale-[0.98] text-left">
@@ -285,27 +288,105 @@
           <button id="btn-reshuffle" class="px-3 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-bold rounded-xl flex items-center gap-1 border border-orange-200 transition">
             <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 換一批
           </button>
-    <!-- 內容容器結尾 -->
+        </div>
+
+        <div id="cards-container" class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3 pb-28">
+          <!-- 動態卡片 -->
+        </div>
+
+        <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-2xl z-10">
+          <button id="btn-start-waterfall" class="w-full py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-[#FF6A28] to-[#FF8C2B] text-white shadow-lg shadow-orange-500/25 active:scale-[0.99] transition">
+            🚀 啟動自動候補訂位 (前 <span id="priority-count-badge">3</span> 家)
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 3: 瀑布流依序候補 ==================== -->
+      <div id="step-3-view" class="hidden h-full overflow-y-auto custom-scroll p-4 space-y-4 pb-12">
+        <div class="bg-white rounded-2xl p-4 border border-[#FEE3CC] shadow-sm">
+          <div class="flex items-center gap-2 border-b border-slate-100 pb-2.5 mb-2.5 text-xs font-black text-slate-800">
+            <i data-lucide="compass" class="w-4 h-4 text-orange-500 animate-spin"></i>
+            候補進度狀態追蹤
+          </div>
+          <div id="booking-logs" class="space-y-1.5 text-xs">
+            <!-- 動態日誌 -->
+          </div>
+        </div>
+
+        <div id="action-call-card" class="bg-white border-2 border-orange-400 rounded-3xl p-5 shadow-lg space-y-3">
+          <div class="inline-block px-3 py-1 bg-orange-600 text-white text-[10px] font-black rounded-full">
+            目前預約處理：第 <span id="current-rank-display">1</span> 順位
+          </div>
+          <h3 id="current-shop-name" class="font-black text-xl text-slate-900 leading-tight">店家名稱</h3>
+          
+          <div class="pt-2 space-y-2">
+            <a id="btn-direct-call" href="tel:" class="flex items-center justify-center gap-2 w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition text-white rounded-2xl font-black text-sm shadow-md">
+              <i data-lucide="phone-call" class="w-4 h-4"></i> 一鍵撥打電話 / 前往 Inline
+            </a>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <button id="btn-mark-success" class="py-3 bg-gradient-to-r from-[#FF6A28] to-[#FF8C2B] hover:brightness-105 active:scale-95 transition text-white rounded-xl font-bold text-xs shadow-md">
+                ✅ 已確認有位！
+              </button>
+              <button id="btn-next-priority" class="py-3 bg-rose-500 hover:bg-rose-600 active:scale-95 transition text-white rounded-xl font-bold text-xs shadow-md">
+                ❌ 客滿，換下一家
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="success-card" class="hidden bg-white border-2 border-emerald-500 rounded-3xl p-5 shadow-xl space-y-3 animate-fadeIn">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-2xl mx-auto">
+            🎉
+          </div>
+          <div class="text-center">
+            <span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">訂位成功確認</span>
+            <h3 id="success-shop-name" class="font-black text-xl text-slate-900 mt-1">餐廳名稱</h3>
+            <p id="success-shop-meta" class="text-xs text-slate-500 font-bold mt-1">2026-10-25 18:30 ‧ 2 位</p>
+          </div>
+          <div class="space-y-2 pt-3 border-t border-slate-100">
+            <a id="btn-add-calendar" target="_blank" href="#" class="flex items-center justify-center gap-2 w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 transition text-white rounded-2xl font-black text-xs shadow-md">
+              <i data-lucide="calendar" class="w-4 h-4"></i> 📅 加入 Google 日曆 (同步老婆)
+            </a>
+            <a id="btn-open-maps" target="_blank" href="#" class="flex items-center justify-center gap-2 w-full py-3 bg-slate-800 hover:bg-slate-900 active:scale-95 transition text-white rounded-2xl font-black text-xs">
+              <i data-lucide="navigation" class="w-4 h-4"></i> 🗺️ Google 地圖導航前往
+            </a>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- 地圖放圖釘 Modal 彈窗 -->
+    <!-- Google 原廠地圖 / 放圖釘 Modal 彈窗 -->
     <div id="map-modal" class="hidden absolute inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl space-y-3 max-h-[92vh] flex flex-col">
         <div class="flex justify-between items-center border-b border-slate-100 pb-2">
           <div>
             <h3 class="font-black text-sm text-slate-900 flex items-center gap-1.5">
-              <i data-lucide="map-pin" class="w-4 h-4 text-rose-500"></i> 在地圖上點擊或拖曳放圖釘
+              <i data-lucide="map-pin" class="w-4 h-4 text-rose-500"></i> Google 原廠地圖定位
             </h3>
-            <p class="text-[10px] text-slate-500 mt-0.5">點擊地圖任意處，圖釘就會移到該位子</p>
+            <p class="text-[10px] text-slate-500 mt-0.5">滑動地圖對準十字準心，或直接點快捷熱門商圈</p>
           </div>
           <button id="btn-close-map-modal" class="text-slate-400 hover:text-slate-700 font-bold text-base px-2">✕</button>
         </div>
 
-        <!-- 互動地圖容器 -->
-        <div class="relative flex-1">
+        <!-- Google 地圖容器 -->
+        <div class="relative flex-1 bg-slate-100 rounded-2xl border border-slate-200 overflow-hidden">
           <div id="interactive-map"></div>
-          <!-- 快捷快速定位至熱門商圈 -->
-          <div class="absolute top-2 right-2 z-[400] flex flex-col gap-1 bg-white/90 backdrop-blur-sm p-1.5 rounded-xl border border-slate-200 shadow-md text-[10px] font-bold">
+          
+          <!-- 地圖正中央紅色立體準心圖釘 -->
+          <div class="map-crosshair flex flex-col items-center">
+            <div class="bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap mb-0.5">
+              設定此點為起點
+            </div>
+            <div class="w-8 h-8 rounded-full bg-rose-600/20 flex items-center justify-center animate-ping absolute top-5"></div>
+            <svg viewBox="0 0 24 24" class="w-8 h-8 text-rose-600 drop-shadow-md fill-rose-600 stroke-white stroke-2">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+              <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+            </svg>
+          </div>
+
+          <!-- 快捷熱門商圈按鈕 -->
+          <div class="absolute top-2 right-2 z-[10] flex flex-col gap-1 bg-white/95 backdrop-blur-sm p-1.5 rounded-xl border border-slate-200 shadow-md text-[10px] font-bold">
             <span class="text-slate-500 text-[9px] px-1">快跳商圈</span>
             <button id="quick-loc-zhuangjing" class="px-2 py-0.5 rounded bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100">莊敬三路</button>
             <button id="quick-loc-hsr" class="px-2 py-0.5 rounded bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100">竹北高鐵</button>
@@ -313,10 +394,14 @@
           </div>
         </div>
 
+        <!-- 座標顯示與外部 Google Maps 輔助 -->
         <div class="bg-orange-50/80 p-2.5 rounded-xl border border-orange-200/60 text-[11px] text-orange-900 font-bold flex items-center justify-between">
           <div class="truncate mr-2">
-            📍 目前圖釘座標：<span id="modal-pin-coords" class="font-mono text-orange-700">24.8272, 121.0250</span>
+            📍 準心座標：<span id="modal-pin-coords" class="font-mono text-orange-700">24.8272, 121.0250</span>
           </div>
+          <a id="btn-open-external-gmaps" href="https://www.google.com/maps" target="_blank" class="shrink-0 text-[10px] bg-white border border-orange-200 text-orange-600 px-2 py-1 rounded-lg hover:bg-orange-100">
+            開啟 Google Maps App ↗
+          </a>
         </div>
 
         <div class="flex gap-2 pt-1">
@@ -338,25 +423,21 @@
             <i data-lucide="alert-triangle" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-black text-sm text-slate-900 leading-tight">定位失敗：請檢查權限</h3>
-            <p class="text-[11px] text-rose-600 font-bold mt-0.5">瀏覽器無法取得您的 GPS 位置</p>
+            <h3 class="font-black text-sm text-slate-900 leading-tight">定位提示：未取得 GPS 權限</h3>
+            <p class="text-[11px] text-rose-600 font-bold mt-0.5">系統已自動為您切換至莊敬三路 360 號</p>
           </div>
         </div>
 
         <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-2 text-slate-700 leading-relaxed">
-          <p class="font-bold text-slate-900">💡 如何開啟手機定位權限：</p>
+          <p class="font-bold text-slate-900">💡 如何開啟手機瀏覽器定位：</p>
           <div class="space-y-1 text-[11px]">
             <p><strong>🍎 iPhone (Safari)：</strong></p>
-            <p class="pl-2 text-slate-600">點網址列左側 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">大小</span> 或 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">aA</span> ➔ 點「網站設定」➔ 將「位置」改為「允許」。</p>
+            <p class="pl-2 text-slate-600">點網址列左側 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">大小</span> 或 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">aA</span> ➔ 網站設定 ➔ 將「位置」改為「允許」。</p>
           </div>
           <div class="space-y-1 text-[11px] pt-1 border-t border-slate-200">
             <p><strong>🤖 Android (Chrome)：</strong></p>
-            <p class="pl-2 text-slate-600">點網址列左側的 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">🔒 鎖頭</span> 或設定 ➔ 點「權限」➔ 將「位置資訊」開關切換為「允許」。</p>
+            <p class="pl-2 text-slate-600">點網址列左側的 <span class="bg-white px-1.5 py-0.5 border rounded font-mono font-bold">🔒 鎖頭</span> ➔ 權限 ➔ 開啟「位置資訊」。</p>
           </div>
-        </div>
-
-        <div class="text-[11px] text-slate-500 font-bold bg-amber-50 text-amber-900 border border-amber-200 p-2.5 rounded-xl text-center">
-          已先自動為您備援定位至：<br/><strong>竹北市莊敬三路360號</strong>
         </div>
 
         <div class="flex gap-2 pt-1">
@@ -389,17 +470,6 @@
       { id: 'dumpling', name: '🥟 水餃/麵食' },
       { id: 'braised', name: '🍢 滷味/小吃/便當' },
       { id: 'fried_bbq', name: '🍗 炸物/烤肉串' }
-    ];
-
-    const LANDMARKS = [
-      { name: '🏠 竹北市莊敬三路360號', lat: 24.8272, lng: 121.0250 },
-      { name: '🛍️ 遠百竹北 / 莊敬商圈', lat: 24.8230, lng: 121.0230 },
-      { name: '🍴 竹北光明美食商圈', lat: 24.8280, lng: 121.0130 },
-      { name: '🚄 竹北高鐵特區', lat: 24.8080, lng: 121.0400 },
-      { name: '🏬 新竹巨城 (Big City)', lat: 24.8090, lng: 120.9750 },
-      { name: '🏮 新竹城隍廟商圈', lat: 24.8040, lng: 120.9650 },
-      { name: '🎓 清大夜市 / 建功商圈', lat: 24.7950, lng: 120.9960 },
-      { name: '🏘️ 新竹關新路商圈', lat: 24.7860, lng: 121.0180 }
     ];
 
     const INITIAL_RESTAURANTS = [
@@ -464,7 +534,7 @@
     ];
 
     // ==========================================
-    // 2. 狀態管理 (預設定位改為竹北市莊敬三路360號)
+    // 2. 狀態管理
     // ==========================================
     const DEFAULT_COORDS = { lat: 24.8272, lng: 121.0250 };
     const DEFAULT_LABEL = '📍 預設位置：竹北市莊敬三路360號';
@@ -475,8 +545,8 @@
       locationLabel: DEFAULT_LABEL,
       radiusKm: 1.5,
       inlineOnly: false,
-      selectedPrices: [2], // 預設中價位
-      selectedCats: [],    // 預設無勾選
+      selectedPrices: [2],
+      selectedCats: [],
       
       googleApiKey: localStorage.getItem('GOOGLE_PLACES_KEY') || '',
       geminiApiKey: localStorage.getItem('GEMINI_API_KEY') || '',
@@ -494,10 +564,9 @@
       bookingLogs: []
     };
 
-    // 地圖與圖釘實例
-    let leafletMap = null;
-    let mapMarker = null;
+    let googleMapInstance = null;
     let pendingCoords = { ...DEFAULT_COORDS };
+    let googleMapsScriptLoaded = false;
 
     // ==========================================
     // 3. 工具運算
@@ -519,7 +588,6 @@
         if (!combined.some(s => s.name === dyn.name)) combined.push(dyn);
       });
 
-      // 依起點計算距離並以半徑為準過濾
       let pool = combined.map(s => ({
         ...s,
         distance: getDistanceKm(state.userCoords.lat, state.userCoords.lng, s.lat, s.lng)
@@ -528,8 +596,6 @@
       if (state.selectedCats.length > 0) pool = pool.filter(s => state.selectedCats.includes(s.cat));
       if (state.selectedPrices.length > 0) pool = pool.filter(s => state.selectedPrices.includes(s.price));
       if (state.inlineOnly) pool = pool.filter(s => s.bookingType === 'inline');
-      
-      // 直接以設定的半徑範圍為篩選依據
       pool = pool.filter(s => s.distance <= state.radiusKm);
 
       return pool;
@@ -544,19 +610,16 @@
     // 4. UI 渲染與互動綁定
     // ==========================================
     function initUI() {
-      // 填入儲存的金鑰
       document.getElementById('input-google-key').value = state.googleApiKey;
       document.getElementById('input-gemini-key').value = state.geminiApiKey;
       document.getElementById('input-wife-email').value = state.wifeEmail;
 
-      // 預設日期時間
       const now = new Date();
       document.getElementById('booking-date').value = now.toISOString().split('T')[0];
       const h = String(now.getHours()).padStart(2, '0');
       const m = String(Math.ceil(now.getMinutes() / 15) * 15 % 60).padStart(2, '0');
       document.getElementById('booking-time').value = `${h}:${m}`;
 
-      // 渲染分類按鈕
       const catGrid = document.getElementById('category-grid');
       catGrid.innerHTML = '';
       CATEGORIES.forEach(c => {
@@ -584,28 +647,26 @@
       lucide.createIcons();
     }
 
-    function requestUserGPS(isManualClick = false) {
+    function requestUserGPS() {
       const locText = document.getElementById('location-text');
       if ('geolocation' in navigator) {
         locText.textContent = '⏳ 正在讀取手機 GPS 定位...';
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             state.userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            state.locationLabel = `📍 GPS 定位 (${state.userCoords.lat.toFixed(3)}, ${state.userCoords.lng.toFixed(3)})`;
+            state.locationLabel = `📍 GPS 定位 (${state.userCoords.lat.toFixed(4)}, ${state.userCoords.lng.toFixed(4)})`;
             locText.textContent = state.locationLabel;
             updateEligibleCountUI();
           },
           (err) => {
-            console.warn('GPS 定位失敗：', err);
+            console.warn('GPS 定位提醒：', err);
             state.userCoords = { ...DEFAULT_COORDS };
-            state.locationLabel = '📍 定位失敗，已自動定位：竹北市莊敬三路360號';
+            state.locationLabel = '📍 已自動設為：竹北市莊敬三路360號';
             locText.textContent = state.locationLabel;
             updateEligibleCountUI();
-            
-            // 彈出權限設定引導說明 Modal
             document.getElementById('permission-modal').classList.remove('hidden');
           },
-          { timeout: 8000, enableHighAccuracy: true }
+          { timeout: 7000, enableHighAccuracy: false, maximumAge: 60000 }
         );
       } else {
         state.userCoords = { ...DEFAULT_COORDS };
@@ -616,58 +677,96 @@
       }
     }
 
-    // 初始化與開啟互動式放圖釘地圖
-    function openMapPicker() {
-      pendingCoords = { ...state.userCoords };
-      document.getElementById('modal-pin-coords').textContent = `${pendingCoords.lat.toFixed(4)}, ${pendingCoords.lng.toFixed(4)}`;
-      document.getElementById('map-modal').classList.remove('hidden');
+    // ==========================================
+    // 5. Google Maps 互動圖台載入與放圖釘
+    // ==========================================
+    function loadGoogleMapsScript(callback) {
+      if (window.google && window.google.maps) {
+        callback();
+        return;
+      }
+      if (googleMapsScriptLoaded) return;
+      googleMapsScriptLoaded = true;
 
-      setTimeout(() => {
-        if (!leafletMap) {
-          // 初始化 Leaflet 地圖，預設中心在目前起點
-          leafletMap = L.map('interactive-map').setView([pendingCoords.lat, pendingCoords.lng], 15);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap'
-          }).addTo(leafletMap);
-
-          // 建立可拖曳的紅色圖釘
-          mapMarker = L.marker([pendingCoords.lat, pendingCoords.lng], {
-            draggable: true
-          }).addTo(leafletMap);
-
-          // 拖曳圖釘更新座標
-          mapMarker.on('dragend', function (e) {
-            const latlng = e.target.getLatLng();
-            pendingCoords = { lat: latlng.lat, lng: latlng.lng };
-            document.getElementById('modal-pin-coords').textContent = `${pendingCoords.lat.toFixed(4)}, ${pendingCoords.lng.toFixed(4)}`;
-          });
-
-          // 點擊地圖任意處直接移動圖釘
-          leafletMap.on('click', function (e) {
-            mapMarker.setLatLng(e.latlng);
-            pendingCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
-            document.getElementById('modal-pin-coords').textContent = `${pendingCoords.lat.toFixed(4)}, ${pendingCoords.lng.toFixed(4)}`;
-          });
-        } else {
-          leafletMap.invalidateSize();
-          leafletMap.setView([pendingCoords.lat, pendingCoords.lng], 15);
-          mapMarker.setLatLng([pendingCoords.lat, pendingCoords.lng]);
-        }
-      }, 150);
+      const script = document.createElement('script');
+      const apiKeyParam = state.googleApiKey.trim() ? `&key=${state.googleApiKey.trim()}` : '';
+      script.src = `https://maps.googleapis.com/maps/api/js?v=weekly${apiKeyParam}`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        if (callback) callback();
+      };
+      script.onerror = () => {
+        console.warn('Google Maps Script 載入未完成，啟用嵌入模式');
+        renderFallbackMap();
+      };
+      document.head.appendChild(script);
     }
 
-    function setMapPinLocation(lat, lng, name) {
+    function renderFallbackMap() {
+      const container = document.getElementById('interactive-map');
+      container.innerHTML = `
+        <iframe 
+          width="100%" 
+          height="100%" 
+          frameborder="0" 
+          style="border:0;" 
+          src="https://maps.google.com/maps?q=${pendingCoords.lat},${pendingCoords.lng}&z=16&output=embed">
+        </iframe>
+      `;
+    }
+
+    function openMapPicker() {
+      pendingCoords = { ...state.userCoords };
+      updateCoordsDisplay(pendingCoords.lat, pendingCoords.lng);
+      document.getElementById('map-modal').classList.remove('hidden');
+
+      loadGoogleMapsScript(() => {
+        const container = document.getElementById('interactive-map');
+        if (window.google && window.google.maps) {
+          if (!googleMapInstance) {
+            googleMapInstance = new google.maps.Map(container, {
+              center: pendingCoords,
+              zoom: 16,
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: false,
+              gestureHandling: 'greedy'
+            });
+
+            // 拖曳地圖時準心對準中心點
+            googleMapInstance.addListener('center_changed', () => {
+              const c = googleMapInstance.getCenter();
+              pendingCoords = { lat: c.lat(), lng: c.lng() };
+              updateCoordsDisplay(pendingCoords.lat, pendingCoords.lng);
+            });
+          } else {
+            googleMapInstance.setCenter(pendingCoords);
+          }
+        } else {
+          renderFallbackMap();
+        }
+      });
+    }
+
+    function updateCoordsDisplay(lat, lng, label = '') {
+      const coordsText = `${lat.toFixed(4)}, ${lng.toFixed(4)} ${label ? '(' + label + ')' : ''}`;
+      document.getElementById('modal-pin-coords').textContent = coordsText;
+      document.getElementById('btn-open-external-gmaps').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+    }
+
+    function setMapCenterQuick(lat, lng, name) {
       pendingCoords = { lat, lng };
-      document.getElementById('modal-pin-coords').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)} (${name})`;
-      if (leafletMap && mapMarker) {
-        leafletMap.setView([lat, lng], 15);
-        mapMarker.setLatLng([lat, lng]);
+      updateCoordsDisplay(lat, lng, name);
+      if (googleMapInstance) {
+        googleMapInstance.panTo(pendingCoords);
+        googleMapInstance.setZoom(16);
+      } else {
+        renderFallbackMap();
       }
     }
 
     function bindEvents() {
-      // 齒輪設定開關
       document.getElementById('btn-toggle-settings').onclick = () => {
         document.getElementById('settings-panel').classList.toggle('hidden');
       };
@@ -675,7 +774,6 @@
         document.getElementById('settings-panel').classList.add('hidden');
       };
 
-      // 儲存金鑰變更
       document.getElementById('input-google-key').onchange = (e) => {
         state.googleApiKey = e.target.value.trim();
         localStorage.setItem('GOOGLE_PLACES_KEY', state.googleApiKey);
@@ -690,9 +788,9 @@
       };
 
       // 定位按鈕
-      document.getElementById('btn-gps').onclick = () => requestUserGPS(true);
+      document.getElementById('btn-gps').onclick = () => requestUserGPS();
 
-      // 地圖放圖釘按鈕
+      // 地圖按鈕
       document.getElementById('btn-open-map-picker').onclick = openMapPicker;
       document.getElementById('btn-close-map-modal').onclick = () => {
         document.getElementById('map-modal').classList.add('hidden');
@@ -701,30 +799,30 @@
         document.getElementById('map-modal').classList.add('hidden');
       };
 
-      // 快跳商圈按鈕
-      document.getElementById('quick-loc-zhuangjing').onclick = () => setMapPinLocation(24.8272, 121.0250, '莊敬三路');
-      document.getElementById('quick-loc-hsr').onclick = () => setMapPinLocation(24.8080, 121.0400, '竹北高鐵');
-      document.getElementById('quick-loc-bigcity').onclick = () => setMapPinLocation(24.8090, 120.9750, '新竹巨城');
+      // 商圈快跳
+      document.getElementById('quick-loc-zhuangjing').onclick = () => setMapCenterQuick(24.8272, 121.0250, '莊敬三路');
+      document.getElementById('quick-loc-hsr').onclick = () => setMapCenterQuick(24.8080, 121.0400, '竹北高鐵');
+      document.getElementById('quick-loc-bigcity').onclick = () => setMapCenterQuick(24.8090, 120.9750, '新竹巨城');
 
       // 確認放圖釘
       document.getElementById('btn-confirm-map-pin').onclick = () => {
         state.userCoords = { ...pendingCoords };
-        state.locationLabel = `📍 自訂地圖圖釘 (${state.userCoords.lat.toFixed(4)}, ${state.userCoords.lng.toFixed(4)})`;
+        state.locationLabel = `📍 Google 地圖起點 (${state.userCoords.lat.toFixed(4)}, ${state.userCoords.lng.toFixed(4)})`;
         document.getElementById('location-text').textContent = state.locationLabel;
         document.getElementById('map-modal').classList.add('hidden');
         updateEligibleCountUI();
       };
 
-      // 權限 Modal 關閉與重試
+      // 權限 Modal
       document.getElementById('btn-close-permission').onclick = () => {
         document.getElementById('permission-modal').classList.add('hidden');
       };
       document.getElementById('btn-retry-gps').onclick = () => {
         document.getElementById('permission-modal').classList.add('hidden');
-        requestUserGPS(true);
+        requestUserGPS();
       };
 
-      // 半徑選擇
+      // 半徑選單
       document.querySelectorAll('.radius-btn').forEach(btn => {
         btn.onclick = () => {
           state.radiusKm = parseFloat(btn.dataset.radius);
@@ -813,6 +911,11 @@
           renderStep3();
         }
       };
+
+      // 步驟頁籤切換事件
+      document.getElementById('nav-step-1').onclick = () => switchStep(1);
+      document.getElementById('nav-step-2').onclick = () => { if (state.drawnShops.length > 0) switchStep(2); };
+      document.getElementById('nav-step-3').onclick = () => { if (state.priorities.length > 0) switchStep(3); };
     }
 
     function switchStep(stepNum) {
@@ -835,7 +938,7 @@
     }
 
     // ==========================================
-    // 5. 抽籤、保留與排序邏輯
+    // 6. 抽籤、保留與排序邏輯
     // ==========================================
     function handleDraw(isReshuffle = false) {
       const pool = getEligiblePool();
@@ -859,7 +962,6 @@
         state.seenIds = [...lockedIds];
       }
 
-      // 距離近者享有更高抽取權重
       const shuffled = [...available].sort((a, b) => {
         return (a.distance + Math.random() * 1.5) - (b.distance + Math.random() * 1.5);
       });
@@ -913,7 +1015,6 @@
           </div>
         `;
 
-        // 點擊整張卡片排順位
         card.onclick = () => {
           const rankIdx = state.priorities.indexOf(shop.id);
           if (rankIdx !== -1) {
@@ -929,7 +1030,6 @@
           renderStep2();
         };
 
-        // 點擊保留按鈕
         const pinBtn = card.querySelector('.btn-pin');
         pinBtn.onclick = (e) => {
           e.stopPropagation();
@@ -948,7 +1048,7 @@
     }
 
     // ==========================================
-    // 6. 依序候補與日曆連動
+    // 7. 依序候補與日曆連動
     // ==========================================
     function handleStartWaterfall() {
       if (state.priorities.length === 0) {
@@ -1000,7 +1100,6 @@
         const sizeVal = document.getElementById('party-size').value;
         document.getElementById('success-shop-meta').textContent = `📅 ${dateVal} ${timeVal} ‧ 👥 ${sizeVal} 位成人 ‧ 📍 ${state.securedShop.addr}`;
 
-        // 綁定 Google Calendar 網址
         const calUrl = buildGoogleCalendarUrl(state.securedShop, dateVal, timeVal, sizeVal);
         document.getElementById('btn-add-calendar').href = calUrl;
         document.getElementById('btn-open-maps').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(state.securedShop.name + ' ' + state.securedShop.addr)}`;
@@ -1037,7 +1136,7 @@
     }
 
     // ==========================================
-    // 7. 外部 API 整合 (Google Places & Gemini)
+    // 8. 外部 API 整合 (Google Places & Gemini)
     // ==========================================
     async function handleFetchGoogleNearby() {
       if (!state.googleApiKey.trim()) {
